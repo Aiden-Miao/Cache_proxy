@@ -1,6 +1,5 @@
-
-#ifndef __PROXY_H_
-#define __PROXY_H_
+#ifndef __PROXY__
+#define __PROXY__
 #include <cstdlib>
 #include <iostream>
 #include <map>
@@ -10,6 +9,7 @@
 #include <string>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include <vector>
 using namespace std;
 class Proxy{
@@ -20,24 +20,34 @@ private:
 
 	struct addrinfo host_info;
 	struct addrinfo *host_info_list;
+	struct addrinfo remote_info;
+	struct addrinfo *remote_info_list;
 
-	string hostname;
-	string proxy_port;//for user to send request
-	string webserver_port;//for proxy to send request to web
+	const char * hostname;
+	const char * proxy_port;//for user to send request
+	const char * webserver_port;//for proxy to send request to web
 public:
 	void getAddressInfo();
 	void createSocketFd();
 	void startListening();//set, bind, listen
 	void acceptConnection();//get the socket fd of accept
 
-	void connectWebServer();//connect to webserver
+	void connectWebServer(const char *hostname, const char * port);//connect to webserver
 
-	int getClientFd(){return client_fd};
-	int getListenFd(){return listen_fd};
-	int getWebServerFd(){return webserver_fd};
+	int getClientFd(){return client_fd;}
+	int getListenFd(){return listen_fd;}
+	int getWebServerFd(){return webserver_fd;}
 
-	Proxy():webserver_fd(-1),client_fd(-1),listen_fd(-1),hostname(""),proxy_port("4444"),webserver_port("80"){};
+	void testProxy();
 
+	Proxy():webserver_fd(-1),client_fd(-1),listen_fd(-1),hostname(NULL),proxy_port("4444"),webserver_port("80"){};
+	~Proxy(){
+		close(webserver_fd);
+		close(client_fd);
+		close(listen_fd);
+		freeaddrinfo(host_info_list);
+		//freeaddrinfo(remote_info_list);
+	}
 
 };
 
