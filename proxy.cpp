@@ -95,15 +95,37 @@ void Proxy::connectWebServer(const char *hostname, const char * port){
   } //if
 }//connect to webserver
 
+string Proxy::receive_request(){
+  std::vector<char> header(1, 0);
+  int index = 0;
+  int nbytes;
+  while ((nbytes = recv(client_fd, &header.data()[index], 1,MSG_WAITALL)) > 0) {
+    if (header.size() > 4) {
+      if (header.back() == '\n' && header[header.size() - 2] == '\r' &&
+          header[header.size() - 3] == '\n' &&
+          header[header.size() - 4] == '\r') {
+          // std::cout << "GOT HEADER!" << std::endl;
+          //find = 1;
+          break;
+        }
+      }
+      header.resize(header.size() + 1);
+      index += nbytes;
+    }
+    for(int i=0;i<header.size();i++){
+      cout<<header[i];
+    }
+    cout<<"******End test******"<<endl;
+}
 void Proxy::testProxy(){
 	std::vector<char> header(1, 0);
 	int index = 0;
-    int nbytes;
-    while ((nbytes = recv(client_fd, &header.data()[index], 1,MSG_WAITALL)) > 0) {
-      if (header.size() > 4) {
-        if (header.back() == '\n' && header[header.size() - 2] == '\r' &&
-            header[header.size() - 3] == '\n' &&
-            header[header.size() - 4] == '\r') {
+  int nbytes;
+  while ((nbytes = recv(client_fd, &header.data()[index], 1,MSG_WAITALL)) > 0) {
+    if (header.size() > 4) {
+      if (header.back() == '\n' && header[header.size() - 2] == '\r' &&
+          header[header.size() - 3] == '\n' &&
+          header[header.size() - 4] == '\r') {
           // std::cout << "GOT HEADER!" << std::endl;
           //find = 1;
           break;
