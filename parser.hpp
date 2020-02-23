@@ -1,6 +1,6 @@
 
 class Parser{
-	virtual parse();
+	virtual void parse() = 0;
 };
 
 class RequestParser:public Parser{

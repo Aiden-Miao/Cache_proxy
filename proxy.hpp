@@ -1,12 +1,8 @@
-class Client{
-	
-};
 
-class Server{
+class Proxy{
+	int user_fd;
+	int webserver_fd;
 	
-};
-
-class Proxy:public Client,public Server{
-	
+		
 };
 
