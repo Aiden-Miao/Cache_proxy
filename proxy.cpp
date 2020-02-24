@@ -95,6 +95,22 @@ void Proxy::connectWebServer(const char *hostname, const char * port){
   } //if
 }//connect to webserver
 
+void Proxy::sendToFd(int fd,string to_send){
+  int total_size = to_send.size();
+  if(total_size==0){
+    return;
+  }
+  int nbytes = 0;
+  while(true){
+    nbytes += send(fd,to_send.substr(nbytes).c_str(),total_size-nbytes,0);
+    cout<<"Send "<<nbytes<<" Bytes"<<endl;
+    if(nbytes==total_size){
+      break;
+    }
+  }
+  assert(nbytes==total_size);
+}
+
 string Proxy::receiveHeader(){
   vector<char> header(1, 0);
   int index = 0;

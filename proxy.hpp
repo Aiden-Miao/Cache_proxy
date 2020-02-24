@@ -33,7 +33,7 @@ public:
 	void acceptConnection();//get the socket fd of accept
 
 	void connectWebServer(const char *hostname, const char * port);//connect to webserver
-
+	void sendToFd(int fd,string to_send);
 	int getClientFd(){return client_fd;}
 	int getListenFd(){return listen_fd;}
 	int getWebServerFd(){return webserver_fd;}

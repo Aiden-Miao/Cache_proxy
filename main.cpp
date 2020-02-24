@@ -21,6 +21,9 @@ void test(Proxy &proxy){
 	}
 	proxy.connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
 	cout<<"Connect web server success!"<<endl;
+	proxy.sendToFd(proxy.getWebServerFd(),req_parser.getHeader());
+	proxy.sendToFd(proxy.getWebServerFd(),req_parser.getContent());
+	cout<<"Send to web server success!"<<endl;
 }
 int main(){
 	Proxy proxy;
