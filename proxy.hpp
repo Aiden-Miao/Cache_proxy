@@ -40,7 +40,7 @@ public:
 
 	void testProxy();
 
-	string receive_request();
+	string receiveRequest();
 
 	Proxy():webserver_fd(-1),client_fd(-1),listen_fd(-1),hostname(NULL),proxy_port("4444"),webserver_port("80"){};
 	~Proxy(){

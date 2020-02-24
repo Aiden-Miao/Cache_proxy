@@ -95,7 +95,7 @@ void Proxy::connectWebServer(const char *hostname, const char * port){
   } //if
 }//connect to webserver
 
-string Proxy::receive_request(){
+string Proxy::receiveRequest(){
   std::vector<char> header(1, 0);
   int index = 0;
   int nbytes;
