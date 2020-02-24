@@ -1,3 +1,5 @@
+#ifndef __REQUEST_PARSER__
+#define __REQUEST_PARSER__
 #include "cache.hpp"
 #include "proxy.hpp"
 #include <cstdlib>
@@ -11,28 +13,28 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <vector>
-class Request_Parser{
+class RequestParser{
 private:
 	string header;
-	string method;//(0,first blank space)
+	string method;// (0,first blank space)
 	string url;//url of the website
-	string web_hostname;//the hostname of the website:www.example.com
-	string web_port;//default 80
-
+	string web_hostname;//the hostname of the website: www.example.com
+	string web_port;// default 80
+	string content_length;
+	string content;
 public:
-	Request_Parser(string head):header(head),web_hostname(""),web_port(""){}
+	RequestParser(string recv_header):header(recv_header),web_hostname(""),web_port("80"),
+				 content_length(""),content(""){}
 	string getHeader(){return header;}
 	string getMethod(){return method;}
 	string getUrl(){return url;}
 	string getWebHostname(){return web_hostname;}
 	string getWebPort(){return web_port;}
-	void parse_Header();
+	string getContentLength(){return content_length;}
+	string getContent(){return content;}
+	void addContent(string content);
+	void parseHeader();
+
+friend class Proxy;
 };
-
-// class RequestParser:public Parser{
-// 	int client_fd;
-// };
-
-// class ResponseParser:public Parser{
-
-// };
+#endif

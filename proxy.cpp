@@ -6,7 +6,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-
+#include<assert.h>
+using namespace std;
 void Proxy::getAddressInfo(){
 	int status;
  	//const char *hostname = NULL;
@@ -71,7 +72,7 @@ void Proxy::connectWebServer(const char *hostname, const char * port){
 
   status = getaddrinfo(hostname, port, &remote_info, &remote_info_list);
   if (status != 0) {
-    cerr << "Error: cannot get address info for host" << endl;
+    cerr << "Error: cannot get address info for webserver" << endl;
     //cerr << "  (" << hostname << "," << port << ")" << endl;
     exit(EXIT_FAILURE);
   } //if
@@ -84,7 +85,6 @@ void Proxy::connectWebServer(const char *hostname, const char * port){
     //cerr << "  (" << hostname << "," << port << ")" << endl;
     exit(EXIT_FAILURE);
   } //if
-  
   cout << "Connecting to " << hostname << " on port " << port << "..." << endl;
   
   status = connect(webserver_fd, remote_info_list->ai_addr, remote_info_list->ai_addrlen);
@@ -95,11 +95,11 @@ void Proxy::connectWebServer(const char *hostname, const char * port){
   } //if
 }//connect to webserver
 
-string Proxy::receiveRequest(){
-  std::vector<char> header(1, 0);
+string Proxy::receiveHeader(){
+  vector<char> header(1, 0);
   int index = 0;
   int nbytes;
-  while ((nbytes = recv(client_fd, &header.data()[index], 1,MSG_WAITALL)) > 0) {
+  while ((nbytes = recv(client_fd, &header.data()[index], 1 ,MSG_WAITALL)) > 0) {
     if (header.size() > 4) {
       if (header.back() == '\n' && header[header.size() - 2] == '\r' &&
           header[header.size() - 3] == '\n' &&
@@ -107,35 +107,57 @@ string Proxy::receiveRequest(){
           // std::cout << "GOT HEADER!" << std::endl;
           //find = 1;
           break;
-        }
       }
-      header.resize(header.size() + 1);
-      index += nbytes;
     }
-    for(int i=0;i<header.size();i++){
-      cout<<header[i];
-    }
-    cout<<"******End test******"<<endl;
+    header.resize(header.size() + 1);
+    index += nbytes;
+  }
+  string ans(header.begin(),header.end());
+  return ans;
 }
-void Proxy::testProxy(){
-	std::vector<char> header(1, 0);
-	int index = 0;
+
+string Proxy::receiveContent(int content_length){
+  vector<char> content(1,0);
+  int index = 0;
   int nbytes;
-  while ((nbytes = recv(client_fd, &header.data()[index], 1,MSG_WAITALL)) > 0) {
-    if (header.size() > 4) {
-      if (header.back() == '\n' && header[header.size() - 2] == '\r' &&
-          header[header.size() - 3] == '\n' &&
-          header[header.size() - 4] == '\r') {
-          // std::cout << "GOT HEADER!" << std::endl;
-          //find = 1;
-          break;
-        }
-      }
-      header.resize(header.size() + 1);
-      index += nbytes;
+  while ((nbytes = recv(client_fd, &content.data()[index], 1 ,MSG_WAITALL)) > 0){
+    content.resize(content.size()+1);
+    index += nbytes;
+    content_length -= nbytes;
+    if(content_length==0){
+      break;
     }
-    for(int i=0;i<header.size();i++){
-    	cout<<header[i];
-    }
-    cout<<"******End test******"<<endl;
+  }
+  assert(content_length==0);
+  string ans(content.begin(),content.end());
+  return ans;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

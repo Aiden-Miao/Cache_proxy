@@ -38,9 +38,9 @@ public:
 	int getListenFd(){return listen_fd;}
 	int getWebServerFd(){return webserver_fd;}
 
-	void testProxy();
 
-	string receiveRequest();
+	string receiveHeader();
+	string receiveContent(int content_length);
 
 	Proxy():webserver_fd(-1),client_fd(-1),listen_fd(-1),hostname(NULL),proxy_port("4444"),webserver_port("80"){};
 	~Proxy(){
