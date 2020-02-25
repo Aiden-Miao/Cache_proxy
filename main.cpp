@@ -1,13 +1,14 @@
 #include"proxy.hpp"
 #include"request_parser.hpp"
+#include"response_parser.hpp"
 #include<sstream>
 using namespace std;
 
 void workHorse(Proxy proxy, int client_fd,size_t id);
 void test(Proxy &proxy){
 	proxy.acceptConnection();
-	string header = proxy.receiveHeader();
-	cout<<"This is header:\n"<<header<<endl;
+	string header = proxy.receiveHeader(proxy.getClientFd());
+	//cout<<"This is header:\n"<<header<<endl;
 	RequestParser req_parser(header);
 	req_parser.parseHeader();
 	if(req_parser.getContentLength().size()!=0){
@@ -15,7 +16,7 @@ void test(Proxy &proxy){
 		ss<<req_parser.getContentLength();
 		int content_length;
 		ss>>content_length;
-		string content = proxy.receiveContent(content_length);
+		string content = proxy.receiveContent(proxy.getClientFd(),content_length);
 		req_parser.addContent(content);
 		cout<<"After addContent, content is:\n"<<req_parser.getContent()<<endl;
 	}
@@ -24,6 +25,27 @@ void test(Proxy &proxy){
 	proxy.sendToFd(proxy.getWebServerFd(),req_parser.getHeader());
 	proxy.sendToFd(proxy.getWebServerFd(),req_parser.getContent());
 	cout<<"Send to web server success!"<<endl;
+	// 2.24 lkf test 
+	string response_header = proxy.receiveHeader(proxy.getWebServerFd());
+	cout<<"This is response_header\n"<<response_header;
+	ResponseParser resp_parser(response_header);
+	cout<<"*******1"<<endl;
+	resp_parser.parseHeader();
+	cout<<"*******2"<<endl;
+	if(resp_parser.getContentLength().size()!=0){
+		stringstream ss;
+		ss<<resp_parser.getContentLength();
+		int response_content_len;
+		ss>>response_content_len;
+		string content = proxy.receiveContent(proxy.getWebServerFd(),response_content_len);
+		cout<<"*******3"<<endl;
+		resp_parser.addContent(content);
+		cout<<"*******4"<<endl;
+	}
+	proxy.sendToFd(proxy.getClientFd(),resp_parser.getHeader());
+	cout<<"*******5"<<endl;
+	proxy.sendToFd(proxy.getClientFd(),resp_parser.getContent());
+	cout<<"*******6"<<endl;
 }
 int main(){
 	Proxy proxy;
@@ -51,7 +73,6 @@ int main(){
 	// 	}
 	// 	catch(exception & e){
 	// 		cout<<e.what()<<endl;
-	// 		close(listen_fd);
 	// 	}
 	// }
 

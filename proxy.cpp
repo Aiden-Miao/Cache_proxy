@@ -57,7 +57,6 @@ void Proxy::acceptConnection(){
 	struct sockaddr_storage socket_addr;
 	socklen_t socket_addr_len = sizeof(socket_addr);
 	client_fd = accept(listen_fd, (struct sockaddr *)&socket_addr, &socket_addr_len);
-	cout<<"Shit! Accept success!"<<endl;
 	if (client_fd == -1) {
     	cerr << "Error: cannot accept connection on socket" << endl;
     	exit(EXIT_FAILURE);
@@ -111,11 +110,11 @@ void Proxy::sendToFd(int fd,string to_send){
   assert(nbytes==total_size);
 }
 
-string Proxy::receiveHeader(){
+string Proxy::receiveHeader(int fd){
   vector<char> header(1, 0);
   int index = 0;
   int nbytes;
-  while ((nbytes = recv(client_fd, &header.data()[index], 1 ,MSG_WAITALL)) > 0) {
+  while ((nbytes = recv(fd, &header.data()[index], 1 ,MSG_WAITALL)) > 0) {
     if (header.size() > 4) {
       if (header.back() == '\n' && header[header.size() - 2] == '\r' &&
           header[header.size() - 3] == '\n' &&
@@ -132,11 +131,11 @@ string Proxy::receiveHeader(){
   return ans;
 }
 
-string Proxy::receiveContent(int content_length){
+string Proxy::receiveContent(int fd,int content_length){
   vector<char> content(1,0);
   int index = 0;
   int nbytes;
-  while ((nbytes = recv(client_fd, &content.data()[index], 1 ,MSG_WAITALL)) > 0){
+  while ((nbytes = recv(fd, &content.data()[index], 1 ,MSG_WAITALL)) > 0){
     content.resize(content.size()+1);
     index += nbytes;
     content_length -= nbytes;

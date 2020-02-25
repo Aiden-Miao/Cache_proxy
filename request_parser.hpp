@@ -15,16 +15,17 @@
 #include <vector>
 class RequestParser{
 private:
-	string header;
+	string header; // the whole request header
 	string method;// (0,first blank space)
 	string url;//url of the website
 	string web_hostname;//the hostname of the website: www.example.com
 	string web_port;// default 80
-	string content_length;
-	string content;
+	string content_length; // length of the content
+	string content; 
+	string request;//the whole request
 public:
 	RequestParser(string recv_header):header(recv_header),web_hostname(""),web_port("80"),
-				 content_length(""),content(""){}
+				 content_length(""),content(""),request(recv_header){}
 	string getHeader(){return header;}
 	string getMethod(){return method;}
 	string getUrl(){return url;}

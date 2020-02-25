@@ -37,10 +37,8 @@ public:
 	int getClientFd(){return client_fd;}
 	int getListenFd(){return listen_fd;}
 	int getWebServerFd(){return webserver_fd;}
-
-
-	string receiveHeader();
-	string receiveContent(int content_length);
+	string receiveHeader(int fd); //recv the header from certain fd
+	string receiveContent(int fd,int content_length); //recv the content
 
 	Proxy():webserver_fd(-1),client_fd(-1),listen_fd(-1),hostname(NULL),proxy_port("4444"),webserver_port("80"){};
 	~Proxy(){
@@ -48,7 +46,7 @@ public:
 		close(client_fd);
 		close(listen_fd);
 		freeaddrinfo(host_info_list);
-		//freeaddrinfo(remote_info_list);
+		freeaddrinfo(remote_info_list);
 	}
 
 };

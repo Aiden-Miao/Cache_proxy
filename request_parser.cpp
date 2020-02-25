@@ -37,4 +37,5 @@ void RequestParser::parseHeader(){
 
 void RequestParser::addContent(string content){
 	this->content = content;
+	this->request += content;
 }

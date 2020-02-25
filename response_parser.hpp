@@ -14,9 +14,12 @@
 #include <unistd.h>
 #include <vector>
  
-class response_parser
+class ResponseParser
 {
 public:
+	string header;
+	string content_length;
+	string content;
 	string response;//the whole response
 	string status; //200 OK
 	string status_num; //200
@@ -25,14 +28,17 @@ public:
 	string date; //when the response is sent
 	string last_modified; //last modified time
 	string E_tag;
-
+	string age;
 	int chunk;///???????????
 	int status_valid; //use to determine if failed
-	int age; //time existed in cache
-	int content_length; //length of content
+	//int age; //time existed in cache
+	//int content_length; //length of content
 
 	//constructor
-	response_parser(string web_response):response(web_response),
+	ResponseParser(string recv_header):	header(recv_header),
+										content_length(""),
+										content(""),
+										response(recv_header),
 										status(""),
 										status_num(""),
 										cache_control(""),
@@ -40,13 +46,20 @@ public:
 										date(""),
 										last_modified(""),
 										E_tag(""),
+										age(""),
 										chunk(0),
-										status_valid(0),
-										age(-1),
-										content_length(0),
-										{};
-	void parse_response(){
-	};
-	~response_parser();
+										status_valid(0)
+										//content_length(0),
+										{}
+	string getHeader(){return header;}
+	string getContentLength(){return content_length;}
+	string getContent(){return content;}
+	string getStatus(){return status;}
+	void parseHeader();
+	void addContent(string content);
+
+	~ResponseParser(){};
 	friend class Proxy;
 };
+
+#endif
