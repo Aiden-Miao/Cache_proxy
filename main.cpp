@@ -10,7 +10,11 @@
 using namespace std;
 
 void workHorse(Proxy &proxy,size_t id){
-	cout<<"Thread id = "<<id<<endl;
+	proxy.acceptConnection(); 
+	if(proxy.getClientFd()==-1){
+		return;
+	}
+	cout<<"accept connection success! Thread id = "<<id<<endl;
 	string header = proxy.receiveHeader(proxy.getClientFd());
 	RequestParser req_parser(header);
 	req_parser.parseHeader();
@@ -93,10 +97,10 @@ int main(){
 	size_t id = 0;
 	signal(SIGPIPE,SIG_IGN);
 	while(true){
-		proxy.acceptConnection(); 
-		if(proxy.getClientFd()==-1){
-			continue;
-		}
+		// proxy.acceptConnection(); 
+		// if(proxy.getClientFd()==-1){
+		// 	continue;
+		// }
 		try{
 			thread new_thread(workHorse,ref(proxy),id); // lack of cache
 			id++;

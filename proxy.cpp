@@ -74,7 +74,6 @@ void Proxy::connectWebServer(const char *hostname, const char * port){
   memset(&remote_info, 0, sizeof(remote_info));
   remote_info.ai_family   = AF_UNSPEC;
   remote_info.ai_socktype = SOCK_STREAM;
-
   status = getaddrinfo(hostname, port, &remote_info, &remote_info_list);
   if (status != 0) {
     cerr << "Error: cannot get address info for webserver" << endl;
@@ -166,7 +165,6 @@ void Proxy::handleGET(RequestParser &req_parser, size_t id){
     req_parser.addContent(content);
     cout<<"After addContent, content is:\n"<<req_parser.getContent()<<endl;
   }
-  //cout<<"@@@@@@@@"<<req_parser.getWebHostname()<<"@@@@@@@@"<<req_parser.getWebPort()<<"@@@@@@@@"<<endl;
   connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
   cout<<"Connect web server success!"<<endl;
   sendToFd(getWebServerFd(),req_parser.getHeader());
