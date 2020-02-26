@@ -1,10 +1,38 @@
 #include"proxy.hpp"
 #include"request_parser.hpp"
 #include"response_parser.hpp"
+#include<stdlib.h>
+#include<cstdlib>
 #include<sstream>
+#include<exception>
+#include<thread>
+#include<csignal>
 using namespace std;
 
-void workHorse(Proxy proxy, int client_fd,size_t id);
+void workHorse(Proxy &proxy,size_t id){
+	cout<<"Thread id = "<<id<<endl;
+	string header = proxy.receiveHeader(proxy.getClientFd());
+	RequestParser req_parser(header);
+	req_parser.parseHeader();
+	// determine the value of req_parser.getMethod();
+	//GET
+	if(req_parser.getMethod()=="GET"){
+		proxy.handleGET(req_parser,id);
+	}
+	//POST
+	else if(req_parser.getMethod()=="POST"){
+		proxy.handlePOST(req_parser,id);
+	}
+	//CONNECT
+	else if(req_parser.getMethod()=="CONNECT"){
+		proxy.handleCONNECT(req_parser,id);
+	}
+	// error
+	else{
+		return;
+	}
+
+}
 void test(Proxy &proxy){
 	proxy.acceptConnection();
 	string header = proxy.receiveHeader(proxy.getClientFd());
@@ -20,6 +48,7 @@ void test(Proxy &proxy){
 		req_parser.addContent(content);
 		cout<<"After addContent, content is:\n"<<req_parser.getContent()<<endl;
 	}
+	//cout<<"@@@@@@@@"<<req_parser.getWebHostname()<<"@@@@@@@@"<<req_parser.getWebPort()<<"@@@@@@@@"<<endl;
 	proxy.connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
 	cout<<"Connect web server success!"<<endl;
 	proxy.sendToFd(proxy.getWebServerFd(),req_parser.getHeader());
@@ -54,27 +83,26 @@ int main(){
 	proxy.createSocketFd();
 	proxy.startListening();//set, bind, listen
 	//****Test start
-	test(proxy);
+	//test(proxy);
 	//****Test end
-
-	// int listen_fd = proxy.getListenFd();
-	// cout<<"Start listening on port 4444..."<<endl;
-	// size_t id = 0;
-	// signal(SIGPIPE,SIG_IGN);
-	// while(true){
-	// 	proxy.acceptConnection();
-	// 	if((int client_fd = proxy.getClientFd())==-1){
-	// 		continue;
-	// 	}
-	// 	try{
-	// 		thread new_thread(workHorse,proxy,client_fd,id); // lack of cache
-	// 		id++;
-	// 		new_thread.detach();
-	// 	}
-	// 	catch(exception & e){
-	// 		cout<<e.what()<<endl;
-	// 	}
-	// }
+	//int listen_fd = proxy.getListenFd();
+	cout<<"Start listening on port 4444..."<<endl;
+	size_t id = 0;
+	signal(SIGPIPE,SIG_IGN);
+	while(true){
+		proxy.acceptConnection();
+		if(proxy.getClientFd()==-1){
+			continue;
+		}
+		try{
+			thread new_thread(workHorse,ref(proxy),id); // lack of cache
+			id++;
+			new_thread.detach();
+		}
+		catch(exception & e){
+			cout<<e.what()<<endl;
+		}
+	}
 
 	return 0;
 }

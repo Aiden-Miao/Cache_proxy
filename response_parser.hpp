@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <vector>
  
+using namespace std;
 class ResponseParser
 {
 public:

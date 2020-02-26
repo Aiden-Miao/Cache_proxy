@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include<sstream>
 #include<assert.h>
 using namespace std;
 void Proxy::getAddressInfo(){
@@ -148,7 +149,49 @@ string Proxy::receiveContent(int fd,int content_length){
   return ans;
 }
 
+void Proxy::handleGET(RequestParser &req_parser, size_t id){
+  if(req_parser.getContentLength().size()!=0){
+    stringstream ss;
+    ss<<req_parser.getContentLength();
+    int content_length;
+    ss>>content_length;
+    string content = receiveContent(getClientFd(),content_length);
+    req_parser.addContent(content);
+    cout<<"After addContent, content is:\n"<<req_parser.getContent()<<endl;
+  }
+  //cout<<"@@@@@@@@"<<req_parser.getWebHostname()<<"@@@@@@@@"<<req_parser.getWebPort()<<"@@@@@@@@"<<endl;
+  connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
+  cout<<"Connect web server success!"<<endl;
+  sendToFd(getWebServerFd(),req_parser.getHeader());
+  sendToFd(getWebServerFd(),req_parser.getContent());
+  cout<<"Send to web server success!"<<endl;
+  string response_header = receiveHeader(getWebServerFd());
+  cout<<"This is response_header\n"<<response_header;
+  ResponseParser resp_parser(response_header);
+  cout<<"*******1"<<endl;
+  resp_parser.parseHeader();
+  cout<<"*******2"<<endl;
+  if(resp_parser.getContentLength().size()!=0){
+    stringstream ss;
+    ss<<resp_parser.getContentLength();
+    int response_content_len;
+    ss>>response_content_len;
+    string content = receiveContent(getWebServerFd(),response_content_len);
+    cout<<"*******3"<<endl;
+    resp_parser.addContent(content);
+    cout<<"*******4"<<endl;
+  }
+  sendToFd(getClientFd(),resp_parser.getHeader());
+  cout<<"*******5"<<endl;
+  sendToFd(getClientFd(),resp_parser.getContent());
+  cout<<"*******6"<<endl;
+}
+void Proxy::handlePOST(RequestParser &req_parser, size_t id){
 
+}
+void Proxy::handleCONNECT(RequestParser &req_parser, size_t id){
+
+}
 
 
 

@@ -11,6 +11,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <vector>
+#include "request_parser.hpp"
+#include "response_parser.hpp"
 using namespace std;
 class Proxy{
 private:
@@ -39,6 +41,10 @@ public:
 	int getWebServerFd(){return webserver_fd;}
 	string receiveHeader(int fd); //recv the header from certain fd
 	string receiveContent(int fd,int content_length); //recv the content
+
+	void handleGET(RequestParser &req_parser, size_t id);
+	void handlePOST(RequestParser &req_parser, size_t id);
+	void handleCONNECT(RequestParser &req_parser, size_t id);
 
 	Proxy():webserver_fd(-1),client_fd(-1),listen_fd(-1),hostname(NULL),proxy_port("4444"),webserver_port("80"){};
 	~Proxy(){

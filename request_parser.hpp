@@ -1,7 +1,7 @@
 #ifndef __REQUEST_PARSER__
 #define __REQUEST_PARSER__
 #include "cache.hpp"
-#include "proxy.hpp"
+//#include "proxy.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <map>
@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <vector>
+using namespace std;
 class RequestParser{
 private:
 	string header; // the whole request header
