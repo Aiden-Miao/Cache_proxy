@@ -232,6 +232,7 @@ void Proxy::handleCONNECT(RequestParser &req_parser, size_t id){
         return;
       }
     }
+    return;
   }
 }
 
