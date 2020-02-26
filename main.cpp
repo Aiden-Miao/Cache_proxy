@@ -25,6 +25,7 @@ void workHorse(Proxy &proxy,size_t id){
 	}
 	//CONNECT
 	else if(req_parser.getMethod()=="CONNECT"){
+		cout<<"***enter CONNECT*****"<<endl;
 		proxy.handleCONNECT(req_parser,id);
 	}
 	// error

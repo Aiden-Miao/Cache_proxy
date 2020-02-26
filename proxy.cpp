@@ -6,7 +6,10 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include<sys/time.h>
+#include<time.h>
 #include<sstream>
+#include<exception>
 #include<assert.h>
 using namespace std;
 void Proxy::getAddressInfo(){
@@ -133,9 +136,10 @@ string Proxy::receiveHeader(int fd){
 }
 
 string Proxy::receiveContent(int fd,int content_length){
+  cout<<"Initial Content-length = "<<content_length<<endl;
   vector<char> content(1,0);
   int index = 0;
-  int nbytes;
+  int nbytes = 0;
   while ((nbytes = recv(fd, &content.data()[index], 1 ,MSG_WAITALL)) > 0){
     content.resize(content.size()+1);
     index += nbytes;
@@ -144,7 +148,8 @@ string Proxy::receiveContent(int fd,int content_length){
       break;
     }
   }
-  assert(content_length==0);
+  cout<<"After recv, content_length = "<<content_length<<", nbytes = "<<nbytes<<endl;
+  assert(content_length==0);// content_length !=0
   string ans(content.begin(),content.end());
   return ans;
 }
@@ -190,9 +195,47 @@ void Proxy::handlePOST(RequestParser &req_parser, size_t id){
 
 }
 void Proxy::handleCONNECT(RequestParser &req_parser, size_t id){
+  connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
+  cout<<"Connect web server success!"<<endl;
+  string success_msg = "HTTP/1.1 200 OK\r\n\r\n";
+  sendToFd(getClientFd(),success_msg);
+  int status = 0;
+  fd_set readfds;
+  int fdmax = max(getClientFd(),getClientFd());
+  int fds[2] = {getClientFd(),getWebServerFd()};
+  while(true){
+    FD_ZERO(&readfds);
+    FD_SET(fds[0],&readfds);
+    FD_SET(fds[1],&readfds);
+    
+    status = select(fdmax+1,&readfds,NULL,NULL,NULL);
+    if(status==-1){
+      cerr<<"Select failed!"<<endl;
+      throw exception("Select failed!");
+    }
+    if(status == 0){
+      return;
+    }
 
+    bool destroy_tunnel = false // if true, destroy the CONNECT tunnel
+    for(size_t i = 0; i < 2; i++){
+      if(FD_ISSET(fds[i],&readfds)){
+        vector<char> recv_buf(1024,0);
+        loopRecv(recv_buf);
+      }
+    }
 }
 
+void Proxy::loopRecv(vector<char> & recv_buf,int fd){
+  int nbytes = 0; //total bytes received
+  int byte_recv = 0; // bytes received in each iteration
+  while((byte_recv = recv(fd, &recv_buf.data()[nbytes],recv_buf.size(),0))==recv_buf.size()){
+    recv_buf.resize(2*recv_buf.size());
+    nbytes+=byte_recv;
+    continue;
+  }
+  nbytes+=byte_recv;
+}
 
 
 
