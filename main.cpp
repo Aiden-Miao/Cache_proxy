@@ -17,10 +17,12 @@ void workHorse(Proxy &proxy,size_t id){
 	// determine the value of req_parser.getMethod();
 	//GET
 	if(req_parser.getMethod()=="GET"){
+		cout<<"***enter GET*****"<<endl;
 		proxy.handleGET(req_parser,id);
 	}
 	//POST
 	else if(req_parser.getMethod()=="POST"){
+		cout<<"***enter POST*****"<<endl;
 		proxy.handlePOST(req_parser,id);
 	}
 	//CONNECT
@@ -91,7 +93,7 @@ int main(){
 	size_t id = 0;
 	signal(SIGPIPE,SIG_IGN);
 	while(true){
-		proxy.acceptConnection();
+		proxy.acceptConnection(); 
 		if(proxy.getClientFd()==-1){
 			continue;
 		}

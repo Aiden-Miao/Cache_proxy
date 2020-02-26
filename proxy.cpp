@@ -60,7 +60,9 @@ void Proxy::startListening(){
 void Proxy::acceptConnection(){
 	struct sockaddr_storage socket_addr;
 	socklen_t socket_addr_len = sizeof(socket_addr);
+  cout<<"***Before acceptConnection***"<<endl;
 	client_fd = accept(listen_fd, (struct sockaddr *)&socket_addr, &socket_addr_len);
+  cout<<"***After acceptConnection***"<<endl;
 	if (client_fd == -1) {
     	cerr << "Error: cannot accept connection on socket" << endl;
     	exit(EXIT_FAILURE);
@@ -111,7 +113,7 @@ void Proxy::sendToFd(int fd,string to_send){
       break;
     }
   }
-  assert(nbytes==total_size);
+  //assert(nbytes==total_size);
 }
 
 string Proxy::receiveHeader(int fd){
@@ -149,7 +151,7 @@ string Proxy::receiveContent(int fd,int content_length){
     }
   }
   cout<<"After recv, content_length = "<<content_length<<", nbytes = "<<nbytes<<endl;
-  assert(content_length==0);// content_length !=0
+  //assert(content_length==0);// content_length !=0
   string ans(content.begin(),content.end());
   return ans;
 }
@@ -192,16 +194,54 @@ void Proxy::handleGET(RequestParser &req_parser, size_t id){
   cout<<"*******6"<<endl;
 }
 void Proxy::handlePOST(RequestParser &req_parser, size_t id){
-
-}
-void Proxy::handleCONNECT(RequestParser &req_parser, size_t id){
+  if(req_parser.getContentLength().size()!=0){
+    stringstream ss;
+    ss<<req_parser.getContentLength();
+    int content_length;
+    ss>>content_length;
+    string content = receiveContent(getClientFd(),content_length);
+    req_parser.addContent(content);
+    cout<<"After addContent, content is:\n"<<req_parser.getContent()<<endl;
+  }
+  //cout<<"@@@@@@@@"<<req_parser.getWebHostname()<<"@@@@@@@@"<<req_parser.getWebPort()<<"@@@@@@@@"<<endl;
   connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
   cout<<"Connect web server success!"<<endl;
+  sendToFd(getWebServerFd(),req_parser.getHeader());
+  sendToFd(getWebServerFd(),req_parser.getContent());
+  cout<<"Send to web server success!"<<endl;
+  string response_header = receiveHeader(getWebServerFd());
+  cout<<"This is response_header\n"<<response_header;
+  ResponseParser resp_parser(response_header);
+  //cout<<"*******1"<<endl;
+  resp_parser.parseHeader();
+  //cout<<"*******2"<<endl;
+  if(resp_parser.getContentLength().size()!=0){
+    stringstream ss;
+    ss<<resp_parser.getContentLength();
+    int response_content_len;
+    ss>>response_content_len;
+    string content = receiveContent(getWebServerFd(),response_content_len);
+    //cout<<"*******3"<<endl;
+    resp_parser.addContent(content);
+    //cout<<"*******4"<<endl;
+  }
+  sendToFd(getClientFd(),resp_parser.getHeader());
+  //cout<<"*******5"<<endl;
+  sendToFd(getClientFd(),resp_parser.getContent());
+  //cout<<"*******6"<<endl;
+}
+void Proxy::handleCONNECT(RequestParser &req_parser, size_t id){
+  //cout<<"In CONNECT, web hostname = "<<req_parser.getWebHostname()<<" ,web port = "<<req_parser.getWebPort();
+  if(req_parser.getWebHostname()==""){
+    return;
+  }
+  connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
+  //cout<<"Connect web server success! id = "<<id<<endl;
   string success_msg = "HTTP/1.1 200 OK\r\n\r\n";
   sendToFd(getClientFd(),success_msg);
   int status = 0;
   fd_set readfds;
-  int fdmax = max(getClientFd(),getClientFd());
+  int fdmax = max(getClientFd(),getWebServerFd());
   int fds[2] = {getClientFd(),getWebServerFd()};
   while(true){
     FD_ZERO(&readfds);
@@ -223,23 +263,24 @@ void Proxy::handleCONNECT(RequestParser &req_parser, size_t id){
       if(FD_ISSET(fds[i],&readfds)){
         vector<char> recv_buf(1024,0);
         int nbytes = loopRecv(recv_buf, fds[i]);//get the data recieved
-        cout<<"recieve success!"<<endl;
-        if(nbytes == 0){
+        //cout<<"receive success!"<<endl;
+        if(nbytes == 0){ // destroy tunnel
           return;
         }
         loopSend(recv_buf, fds[1-i], nbytes);//send all data out
-        cout<<"send success!"<<endl;
-        return;
+        //cout<<"send success!"<<endl;
+        break;
       }
     }
-    return;
   }
 }
 
 int Proxy::loopRecv(vector<char> & recv_buf,int fd){
   int nbytes = 0; //total bytes received
   int byte_recv = 0; // bytes received in each iteration
-  while((byte_recv = recv(fd, &recv_buf.data()[nbytes],recv_buf.size(),0))==(int)recv_buf.size()){
+  int prev_recv_size = 0;
+  while((byte_recv = recv(fd, &recv_buf.data()[nbytes],(int)recv_buf.size()-prev_recv_size,0))==(int)recv_buf.size()){
+    prev_recv_size = (int)recv_buf.size();
     recv_buf.resize(2*recv_buf.size());
     nbytes += byte_recv;
     continue;
@@ -254,7 +295,8 @@ void Proxy::loopSend(vector<char> & recv_buf, int fd, int byte_size){
   while(byte_sent < byte_size){
     byte_sent += send(fd, &recv_buf.data()[byte_sent], byte_size - byte_sent, 0);
   }
-  assert(byte_sent == byte_size);
+  //cout<<"In loop send, byte_sent = "<<byte_sent<<", total_byte = "<<byte_size<<endl;
+  //assert(byte_sent == byte_size);
 } 
 
 
