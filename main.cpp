@@ -1,4 +1,5 @@
 #include"proxy.hpp"
+#include"handler.hpp"
 #include"request_parser.hpp"
 #include"response_parser.hpp"
 #include<stdlib.h>
@@ -9,30 +10,27 @@
 #include<csignal>
 using namespace std;
 
-void workHorse(Proxy &proxy,size_t id){
-	proxy.acceptConnection(); 
-	if(proxy.getClientFd()==-1){
-		return;
-	}
+void workHorse(int client_fd, size_t id){
 	cout<<"accept connection success! Thread id = "<<id<<endl;
-	string header = proxy.receiveHeader(proxy.getClientFd());
+	Handler handler;
+	string header = handler.receiveHeader(client_fd);
 	RequestParser req_parser(header);
 	req_parser.parseHeader();
 	// determine the value of req_parser.getMethod();
 	//GET
 	if(req_parser.getMethod()=="GET"){
 		cout<<"***enter GET*****"<<endl;
-		proxy.handleGET(req_parser,id);
+		handler.handleGET(client_fd,req_parser,id);
 	}
 	//POST
 	else if(req_parser.getMethod()=="POST"){
 		cout<<"***enter POST*****"<<endl;
-		proxy.handlePOST(req_parser,id);
+		handler.handlePOST(client_fd,req_parser,id);
 	}
 	//CONNECT
 	else if(req_parser.getMethod()=="CONNECT"){
 		cout<<"***enter CONNECT*****"<<endl;
-		proxy.handleCONNECT(req_parser,id);
+		handler.handleCONNECT(client_fd,req_parser,id);
 	}
 	// error
 	else{
@@ -40,49 +38,49 @@ void workHorse(Proxy &proxy,size_t id){
 	}
 
 }
-void test(Proxy &proxy){
-	proxy.acceptConnection();
-	string header = proxy.receiveHeader(proxy.getClientFd());
-	//cout<<"This is header:\n"<<header<<endl;
-	RequestParser req_parser(header);
-	req_parser.parseHeader();
-	if(req_parser.getContentLength().size()!=0){
-		stringstream ss;
-		ss<<req_parser.getContentLength();
-		int content_length;
-		ss>>content_length;
-		string content = proxy.receiveContent(proxy.getClientFd(),content_length);
-		req_parser.addContent(content);
-		cout<<"After addContent, content is:\n"<<req_parser.getContent()<<endl;
-	}
-	//cout<<"@@@@@@@@"<<req_parser.getWebHostname()<<"@@@@@@@@"<<req_parser.getWebPort()<<"@@@@@@@@"<<endl;
-	proxy.connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
-	cout<<"Connect web server success!"<<endl;
-	proxy.sendToFd(proxy.getWebServerFd(),req_parser.getHeader());
-	proxy.sendToFd(proxy.getWebServerFd(),req_parser.getContent());
-	cout<<"Send to web server success!"<<endl;
-	// 2.24 lkf test 
-	string response_header = proxy.receiveHeader(proxy.getWebServerFd());
-	cout<<"This is response_header\n"<<response_header;
-	ResponseParser resp_parser(response_header);
-	cout<<"*******1"<<endl;
-	resp_parser.parseHeader();
-	cout<<"*******2"<<endl;
-	if(resp_parser.getContentLength().size()!=0){
-		stringstream ss;
-		ss<<resp_parser.getContentLength();
-		int response_content_len;
-		ss>>response_content_len;
-		string content = proxy.receiveContent(proxy.getWebServerFd(),response_content_len);
-		cout<<"*******3"<<endl;
-		resp_parser.addContent(content);
-		cout<<"*******4"<<endl;
-	}
-	proxy.sendToFd(proxy.getClientFd(),resp_parser.getHeader());
-	cout<<"*******5"<<endl;
-	proxy.sendToFd(proxy.getClientFd(),resp_parser.getContent());
-	cout<<"*******6"<<endl;
-}
+// void test(Proxy &proxy){
+// 	proxy.acceptConnection();
+// 	string header = proxy.receiveHeader(proxy.getClientFd());
+// 	//cout<<"This is header:\n"<<header<<endl;
+// 	RequestParser req_parser(header);
+// 	req_parser.parseHeader();
+// 	if(req_parser.getContentLength().size()!=0){
+// 		stringstream ss;
+// 		ss<<req_parser.getContentLength();
+// 		int content_length;
+// 		ss>>content_length;
+// 		string content = proxy.receiveContent(proxy.getClientFd(),content_length);
+// 		req_parser.addContent(content);
+// 		cout<<"After addContent, content is:\n"<<req_parser.getContent()<<endl;
+// 	}
+// 	//cout<<"@@@@@@@@"<<req_parser.getWebHostname()<<"@@@@@@@@"<<req_parser.getWebPort()<<"@@@@@@@@"<<endl;
+// 	proxy.connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
+// 	cout<<"Connect web server success!"<<endl;
+// 	proxy.sendToFd(proxy.getWebServerFd(),req_parser.getHeader());
+// 	proxy.sendToFd(proxy.getWebServerFd(),req_parser.getContent());
+// 	cout<<"Send to web server success!"<<endl;
+// 	// 2.24 lkf test 
+// 	string response_header = proxy.receiveHeader(proxy.getWebServerFd());
+// 	cout<<"This is response_header\n"<<response_header;
+// 	ResponseParser resp_parser(response_header);
+// 	cout<<"*******1"<<endl;
+// 	resp_parser.parseHeader();
+// 	cout<<"*******2"<<endl;
+// 	if(resp_parser.getContentLength().size()!=0){
+// 		stringstream ss;
+// 		ss<<resp_parser.getContentLength();
+// 		int response_content_len;
+// 		ss>>response_content_len;
+// 		string content = proxy.receiveContent(proxy.getWebServerFd(),response_content_len);
+// 		cout<<"*******3"<<endl;
+// 		resp_parser.addContent(content);
+// 		cout<<"*******4"<<endl;
+// 	}
+// 	proxy.sendToFd(proxy.getClientFd(),resp_parser.getHeader());
+// 	cout<<"*******5"<<endl;
+// 	proxy.sendToFd(proxy.getClientFd(),resp_parser.getContent());
+// 	cout<<"*******6"<<endl;
+// }
 int main(){
 	Proxy proxy;
 	// create a cache
@@ -92,17 +90,16 @@ int main(){
 	//****Test start
 	//test(proxy);
 	//****Test end
-	//int listen_fd = proxy.getListenFd();
-	cout<<"Start listening on port 4444..."<<endl;
 	size_t id = 0;
 	signal(SIGPIPE,SIG_IGN);
 	while(true){
-		// proxy.acceptConnection(); 
-		// if(proxy.getClientFd()==-1){
-		// 	continue;
-		// }
+		int client_fd = proxy.acceptConnection(); 
+		if(client_fd==-1){
+			continue;
+		}
 		try{
-			thread new_thread(workHorse,ref(proxy),id); // lack of cache
+			//thread new_thread(workHorse,ref(proxy),id); // lack of cache
+			thread new_thread(workHorse,client_fd,id); // lack of cache
 			id++;
 			new_thread.detach();
 		}

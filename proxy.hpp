@@ -16,45 +16,50 @@
 using namespace std;
 class Proxy{
 private:
-	int webserver_fd;//fd for website
+	//int webserver_fd;//fd for website
 	int client_fd;// fd for user
 	int listen_fd;//dummy fd
 
 	struct addrinfo host_info;
-	struct addrinfo *host_info_list;
-	struct addrinfo remote_info;
-	struct addrinfo *remote_info_list;
+	struct addrinfo *host_info_list = NULL;
+	// struct addrinfo remote_info;
+	// struct addrinfo *remote_info_list = NULL;
 
 	const char * hostname;
 	const char * proxy_port;//for user to send request
-	const char * webserver_port;//for proxy to send request to web
+	//const char * webserver_port;//for proxy to send request to web
 public:
 	void getAddressInfo();
 	void createSocketFd();
 	void startListening();//set, bind, listen
-	void acceptConnection();//get the socket fd of accept
+	int acceptConnection();//get the socket fd of accept
 
-	void connectWebServer(const char *hostname, const char * port);//connect to webserver
-	void sendToFd(int fd,string to_send);
+	// void connectWebServer(const char *hostname, const char * port);//connect to webserver
+	// void sendToFd(int fd,string to_send);
 	int getClientFd(){return client_fd;}
-	int getListenFd(){return listen_fd;}
-	int getWebServerFd(){return webserver_fd;}
-	string receiveHeader(int fd); //recv the header from certain fd
-	string receiveContent(int fd,int content_length); //recv the content
-	int loopRecv(vector<char> & recv_buf,int fd);
-	void loopSend(vector<char> & recv_buf, int fd, int byte_size);
+	// int getListenFd(){return listen_fd;}
+	// int getWebServerFd(){return webserver_fd;}
+	// string receiveHeader(int fd); //recv the header from certain fd
+	// string receiveContent(int fd,int content_length); //recv the content
+	// int loopRecv(vector<char> & recv_buf,int fd);
+	// void loopSend(vector<char> & recv_buf, int fd, int byte_size);
 
-	void handleGET(RequestParser &req_parser, size_t id);
-	void handlePOST(RequestParser &req_parser, size_t id);
-	void handleCONNECT(RequestParser &req_parser, size_t id);
+	// void handleGET(RequestParser &req_parser, size_t id);
+	// void handlePOST(RequestParser &req_parser, size_t id);
+	// void handleCONNECT(RequestParser &req_parser, size_t id);
 
-	Proxy():webserver_fd(-1),client_fd(-1),listen_fd(-1),hostname(NULL),proxy_port("4444"),webserver_port("80"){};
+	//Proxy():webserver_fd(-1),client_fd(-1),listen_fd(-1),hostname(NULL),proxy_port("4567"),webserver_port("80"){};
+	Proxy():client_fd(-1),listen_fd(-1),hostname(NULL),proxy_port("4567"){};
 	~Proxy(){
-		close(webserver_fd);
+		//close(webserver_fd);
 		close(client_fd);
 		close(listen_fd);
-		freeaddrinfo(host_info_list);
-		freeaddrinfo(remote_info_list);
+		if(host_info_list){
+			freeaddrinfo(host_info_list);
+		}
+		// if(remote_info_list){
+		// 	freeaddrinfo(remote_info_list);
+		// }
 	}
 
 };
