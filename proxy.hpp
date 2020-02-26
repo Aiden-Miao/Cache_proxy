@@ -41,7 +41,8 @@ public:
 	int getWebServerFd(){return webserver_fd;}
 	string receiveHeader(int fd); //recv the header from certain fd
 	string receiveContent(int fd,int content_length); //recv the content
-	void loopRecv(vector<char> & recv_buf,int fd);
+	int loopRecv(vector<char> & recv_buf,int fd);
+	void loopSend(vector<char> & recv_buf, int fd, int byte_size);
 
 	void handleGET(RequestParser &req_parser, size_t id);
 	void handlePOST(RequestParser &req_parser, size_t id);

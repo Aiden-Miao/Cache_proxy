@@ -209,34 +209,52 @@ void Proxy::handleCONNECT(RequestParser &req_parser, size_t id){
     FD_SET(fds[1],&readfds);
     
     status = select(fdmax+1,&readfds,NULL,NULL,NULL);
-    if(status==-1){
+    if(status == -1){
       cerr<<"Select failed!"<<endl;
-      throw exception("Select failed!");
+      logic_error e("select failed!");
+      throw exception(e);
     }
     if(status == 0){
       return;
     }
 
-    bool destroy_tunnel = false // if true, destroy the CONNECT tunnel
+    //bool destroy_tunnel = false // if true, destroy the CONNECT tunnel
     for(size_t i = 0; i < 2; i++){
       if(FD_ISSET(fds[i],&readfds)){
         vector<char> recv_buf(1024,0);
-        loopRecv(recv_buf);
+        int nbytes = loopRecv(recv_buf, fds[i]);//get the data recieved
+        cout<<"recieve success!"<<endl;
+        if(nbytes == 0){
+          return;
+        }
+        loopSend(recv_buf, fds[1-i], nbytes);//send all data out
+        cout<<"send success!"<<endl;
+        return;
       }
     }
+  }
 }
 
-void Proxy::loopRecv(vector<char> & recv_buf,int fd){
+int Proxy::loopRecv(vector<char> & recv_buf,int fd){
   int nbytes = 0; //total bytes received
   int byte_recv = 0; // bytes received in each iteration
-  while((byte_recv = recv(fd, &recv_buf.data()[nbytes],recv_buf.size(),0))==recv_buf.size()){
+  while((byte_recv = recv(fd, &recv_buf.data()[nbytes],recv_buf.size(),0))==(int)recv_buf.size()){
     recv_buf.resize(2*recv_buf.size());
-    nbytes+=byte_recv;
+    nbytes += byte_recv;
     continue;
   }
   nbytes+=byte_recv;
+  return nbytes;
 }
 
+//continue send date until all is sent
+void Proxy::loopSend(vector<char> & recv_buf, int fd, int byte_size){
+  int byte_sent = 0;
+  while(byte_sent < byte_size){
+    byte_sent += send(fd, &recv_buf.data()[byte_sent], byte_size - byte_sent, 0);
+  }
+  assert(byte_sent == byte_size);
+} 
 
 
 
