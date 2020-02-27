@@ -22,11 +22,14 @@ private:
 	string web_hostname;//the hostname of the website: www.example.com
 	string web_port;// default 80
 	string content_length; // length of the content
-	string content; 
+	string content;
 	string request;//the whole request
+
+	int chunk;//the chunk for POST
+
 public:
 	RequestParser(string recv_header):header(recv_header),web_hostname(""),web_port("80"),
-				 content_length(""),content(""),request(recv_header){}
+				 content_length(""),content(""),request(recv_header),chunk(0){}
 	string getHeader(){return header;}
 	string getMethod(){return method;}
 	string getUrl(){return url;}
@@ -34,6 +37,7 @@ public:
 	string getWebPort(){return web_port;}
 	string getContentLength(){return content_length;}
 	string getContent(){return content;}
+	bool getchunk(){if(chunk == 1){return true;}return false;}
 	void addContent(string content);
 	void parseHeader();
 

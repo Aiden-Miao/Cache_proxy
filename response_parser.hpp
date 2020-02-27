@@ -30,7 +30,8 @@ public:
 	string last_modified; //last modified time
 	string E_tag;
 	string age;
-	int chunk;///???????????
+
+	int chunk;//the chunk for get
 	int status_valid; //use to determine if failed
 	//int age; //time existed in cache
 	//int content_length; //length of content
@@ -56,6 +57,7 @@ public:
 	string getContentLength(){return content_length;}
 	string getContent(){return content;}
 	string getStatus(){return status;}
+	bool getchunk(){if(chunk == 1){return true;}return false;}
 	void parseHeader();
 	void addContent(string content);
 

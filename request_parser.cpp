@@ -44,6 +44,10 @@ void RequestParser::parseHeader(){
 		content_length = header.substr(length_pos,length_len);
 	}
 
+	if((response.find("chunked") != string::npos)){
+		chunk = 1;
+	}
+
 }
 
 void RequestParser::addContent(string content){

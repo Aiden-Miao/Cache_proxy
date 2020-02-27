@@ -215,6 +215,10 @@ void Handler::handleCONNECT(int client_fd,RequestParser &req_parser, size_t id){
   }
 }
 
+void Handler::get_chunk(RequestParser &req_parser){
+  string header = req_parser.getHeader();
+  
+}
 int Handler::loopRecv(vector<char> & recv_buf,int fd){
   int nbytes = 0; //total bytes received
   int byte_recv = 0; // bytes received in each iteration
