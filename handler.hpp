@@ -31,11 +31,13 @@ public:
 	string receiveContent(int fd,int content_length); //recv the content
 	int loopRecv(vector<char> & recv_buf,int fd);
 	void loopSend(vector<char> & recv_buf, int fd, int byte_size);
+	string recvChunkedContent(int fd);
+
 
 	void handleGET(int client_fd,RequestParser &req_parser, size_t id);
 	void handlePOST(int client_fd,RequestParser &req_parser, size_t id);
 	void handleCONNECT(int client_fd,RequestParser &req_parser, size_t id);
-	Handler(){}
+	Handler():webserver_fd(-1),webserver_port(NULL){}
 	~Handler(){
 		if(webserver_fd!=-1){
 			close(webserver_fd);

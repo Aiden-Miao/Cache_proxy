@@ -69,7 +69,7 @@ void ResponseParser::parseHeader(){
 	
 	//see if use chunk to transmit
 	if((response.find("chunked") != string::npos)){
-		chunk = 1;
+		is_chunked = true;
 	}
 	
 	//status valid or invalid

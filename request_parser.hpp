@@ -24,12 +24,11 @@ private:
 	string content_length; // length of the content
 	string content;
 	string request;//the whole request
-
-	int chunk;//the chunk for POST
+	bool is_chunked;// indicates the request is chunked or not
 
 public:
 	RequestParser(string recv_header):header(recv_header),web_hostname(""),web_port("80"),
-				 content_length(""),content(""),request(recv_header),chunk(0){}
+				 content_length(""),content(""),request(recv_header),is_chunked(false){}
 	string getHeader(){return header;}
 	string getMethod(){return method;}
 	string getUrl(){return url;}
@@ -37,7 +36,7 @@ public:
 	string getWebPort(){return web_port;}
 	string getContentLength(){return content_length;}
 	string getContent(){return content;}
-	bool getchunk(){if(chunk == 1){return true;}return false;}
+	bool getIsChunked(){return is_chunked;}
 	void addContent(string content);
 	void parseHeader();
 

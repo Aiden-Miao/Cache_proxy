@@ -103,6 +103,7 @@ string Handler::receiveContent(int fd,int content_length){
 
 void Handler::handleGET(int client_fd, RequestParser &req_parser, size_t id){
   if(req_parser.getContentLength().size()!=0){
+    cout<<"*****Enter recv normal content*****"<<endl;
     stringstream ss;
     ss<<req_parser.getContentLength();
     int content_length;
@@ -111,6 +112,11 @@ void Handler::handleGET(int client_fd, RequestParser &req_parser, size_t id){
     req_parser.addContent(content);
     cout<<"After addContent, content is:\n"<<req_parser.getContent()<<endl;
   }
+  // else if(req_parser.getIsChunked()){
+  //   cout<<"*****Enter recv chunked content*****"<<endl;
+  //   string content = recvChunkedContent(client_fd);
+  //   req_parser.addContent(content);
+  // }
   connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
   cout<<"Connect web server success!"<<endl;
   sendToFd(getWebServerFd(),req_parser.getHeader());
@@ -127,9 +133,21 @@ void Handler::handleGET(int client_fd, RequestParser &req_parser, size_t id){
     ss>>response_content_len;
     string content = receiveContent(getWebServerFd(),response_content_len);
     resp_parser.addContent(content);
+    sendToFd(client_fd,resp_parser.getHeader());
+    sendToFd(client_fd,resp_parser.getContent());
   }
-  sendToFd(client_fd,resp_parser.getHeader());
-  sendToFd(client_fd,resp_parser.getContent());
+  else if(resp_parser.getIsChunked()){
+    string content = recvChunkedContent(webserver_fd);
+    cout<<"****nmsl****"<<endl;
+    cout<<content<<endl;
+    resp_parser.addContent(content);
+    sendToFd(client_fd,resp_parser.getHeader());
+    sendToFd(client_fd,resp_parser.getContent());
+  }
+  else{
+    sendToFd(client_fd,resp_parser.getHeader());
+  }
+  // sendToFd(client_fd,resp_parser.getContent());
 }
 
 void Handler::handlePOST(int client_fd,RequestParser &req_parser, size_t id){
@@ -142,7 +160,10 @@ void Handler::handlePOST(int client_fd,RequestParser &req_parser, size_t id){
     req_parser.addContent(content);
     cout<<"After addContent, content is:\n"<<req_parser.getContent()<<endl;
   }
-  //cout<<"@@@@@@@@"<<req_parser.getWebHostname()<<"@@@@@@@@"<<req_parser.getWebPort()<<"@@@@@@@@"<<endl;
+  else if(req_parser.getIsChunked()){
+    string content = recvChunkedContent(client_fd);
+    req_parser.addContent(content);
+  }
   connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
   cout<<"Connect web server success!"<<endl;
   sendToFd(getWebServerFd(),req_parser.getHeader());
@@ -162,10 +183,17 @@ void Handler::handlePOST(int client_fd,RequestParser &req_parser, size_t id){
     string content = receiveContent(getWebServerFd(),response_content_len);
     //cout<<"*******3"<<endl;
     resp_parser.addContent(content);
+    // sendToFd(client_fd,resp_parser.getHeader());
+    // sendToFd(client_fd,resp_parser.getContent());
     //cout<<"*******4"<<endl;
   }
+  else if(resp_parser.getIsChunked()){
+    string content = recvChunkedContent(getWebServerFd());
+    resp_parser.addContent(content);
+    // sendToFd(client_fd,resp_parser.getHeader());
+    // sendToFd(client_fd,resp_parser.getContent());
+  }
   sendToFd(client_fd,resp_parser.getHeader());
-  //cout<<"*******5"<<endl;
   sendToFd(client_fd,resp_parser.getContent());
   //cout<<"*******6"<<endl;
 }
@@ -215,10 +243,37 @@ void Handler::handleCONNECT(int client_fd,RequestParser &req_parser, size_t id){
   }
 }
 
-void Handler::get_chunk(RequestParser &req_parser){
-  string header = req_parser.getHeader();
-  
+string Handler::recvChunkedContent(int fd){
+  vector<char> buf(1, 0);
+  int index = 0;
+  int nbytes;
+  //while ((nbytes = recv(fd, &buf.data()[index], 1 ,MSG_WAITALL)) >= 0) {
+  while (true) {
+    nbytes = recv(fd, &buf.data()[index], 1 ,MSG_WAITALL);
+    if(nbytes==0){
+      break;
+    }
+    if(nbytes==-1){
+      continue;
+    }
+    if (buf.size() > 5) {
+      if (buf.back() == '\n' && buf[buf.size() - 2] == '\r' &&
+          buf[buf.size() - 3] == '\n' &&
+          buf[buf.size() - 4] == '\r' && buf[buf.size() - 5] == '0') {
+          cout<<"****Encounter 0,r,n******"<<endl;
+          // std::cout << "GOT HEADER!" << std::endl;
+          //find = 1;
+          break;
+      }
+    }
+    buf.resize(buf.size() + 1);
+    index += nbytes;
+  }
+  string ans(buf.begin(),buf.end());
+  return ans;
 }
+
+
 int Handler::loopRecv(vector<char> & recv_buf,int fd){
   int nbytes = 0; //total bytes received
   int byte_recv = 0; // bytes received in each iteration
