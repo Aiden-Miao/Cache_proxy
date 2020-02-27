@@ -93,7 +93,9 @@ int main(){
 	size_t id = 0;
 	signal(SIGPIPE,SIG_IGN);
 	while(true){
+		cout<<"****Before acceptConnection****"<<endl;
 		int client_fd = proxy.acceptConnection(); 
+		cout<<"****After acceptConnection****"<<endl;
 		if(client_fd==-1){
 			continue;
 		}

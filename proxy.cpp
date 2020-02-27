@@ -60,9 +60,9 @@ void Proxy::startListening(){
 int Proxy::acceptConnection(){
 	struct sockaddr_storage socket_addr;
 	socklen_t socket_addr_len = sizeof(socket_addr);
-  cout<<"***Before acceptConnection***"<<endl;
+  //cout<<"***Before acceptConnection***"<<endl;
 	int client_fd = accept(listen_fd, (struct sockaddr *)&socket_addr, &socket_addr_len);
-  cout<<"***After acceptConnection***"<<endl;
+  //cout<<"***After acceptConnection***"<<endl;
 	if (client_fd == -1) {
     	cerr << "Error: cannot accept connection on socket" << endl;
     	exit(EXIT_FAILURE);

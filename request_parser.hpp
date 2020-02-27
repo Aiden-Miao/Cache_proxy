@@ -28,7 +28,7 @@ private:
 
 public:
 	RequestParser(string recv_header):header(recv_header),web_hostname(""),web_port("80"),
-				 content_length(""),content(""),request(recv_header),is_chunked(false){}
+				 content_length("0"),content(""),request(recv_header),is_chunked(false){}
 	string getHeader(){return header;}
 	string getMethod(){return method;}
 	string getUrl(){return url;}

@@ -101,7 +101,7 @@ string Handler::receiveContent(int fd,int content_length){
 }
 
 void Handler::handleGET(int client_fd, RequestParser &req_parser, size_t id){
-  if(req_parser.getContentLength().size()!=0){
+  if(req_parser.getContentLength()!="0"){
     cout<<"*****Enter recv normal content*****"<<endl;
     stringstream ss;
     ss<<req_parser.getContentLength();
@@ -150,7 +150,7 @@ void Handler::handleGET(int client_fd, RequestParser &req_parser, size_t id){
 }
 
 void Handler::handlePOST(int client_fd,RequestParser &req_parser, size_t id){
-  if(req_parser.getContentLength().size()!=0){
+  if(req_parser.getContentLength()!="0"){
     stringstream ss;
     ss<<req_parser.getContentLength();
     int content_length;

@@ -38,7 +38,7 @@ public:
 
 	//constructor
 	ResponseParser(string recv_header):	header(recv_header),
-										content_length(""),
+										content_length("0"),
 										content(""),
 										response(recv_header),
 										status(""),
