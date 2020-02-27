@@ -65,7 +65,11 @@ string Handler::receiveHeader(int fd){
   vector<char> header(1, 0);
   int index = 0;
   int nbytes;
-  while ((nbytes = recv(fd, &header.data()[index], 1 ,MSG_WAITALL)) > 0) {
+  while (true) {
+    nbytes = recv(fd, &header.data()[index], 1 ,MSG_WAITALL);
+    if(nbytes == -1){
+      continue;
+    }
     if (header.size() > 4) {
       if (header.back() == '\n' && header[header.size() - 2] == '\r' &&
           header[header.size() - 3] == '\n' &&
@@ -87,7 +91,11 @@ string Handler::receiveContent(int fd,int content_length){
   vector<char> content(1,0);
   int index = 0;
   int nbytes = 0;
-  while ((nbytes = recv(fd, &content.data()[index], 1 ,MSG_WAITALL)) > 0){
+  while (true){
+    nbytes = recv(fd, &content.data()[index], 1 ,MSG_WAITALL);
+    if(nbytes == -1){
+      continue;
+    }
     content.resize(content.size()+1);
     index += nbytes;
     content_length -= nbytes;
