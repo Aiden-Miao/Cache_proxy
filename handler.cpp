@@ -70,8 +70,6 @@ string Handler::receiveHeader(int fd){
       if (header.back() == '\n' && header[header.size() - 2] == '\r' &&
           header[header.size() - 3] == '\n' &&
           header[header.size() - 4] == '\r') {
-          // std::cout << "GOT HEADER!" << std::endl;
-          //find = 1;
           break;
       }
     }
@@ -88,12 +86,13 @@ string Handler::receiveContent(int fd,int content_length){
   int index = 0;
   int nbytes = 0;
   while ((nbytes = recv(fd, &content.data()[index], 1 ,MSG_WAITALL)) > 0){
-    content.resize(content.size()+1);
+    //content.resize(content.size()+1);
     index += nbytes;
     content_length -= nbytes;
     if(content_length==0){
       break;
     }
+    content.resize(content.size()+1);
   }
   cout<<"After recv, content_length = "<<content_length<<", nbytes = "<<nbytes<<endl;
   //assert(content_length==0);// content_length !=0
