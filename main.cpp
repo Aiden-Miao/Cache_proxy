@@ -35,17 +35,19 @@ void workHorse(int client_fd, size_t id){
 	// determine the value of req_parser.getMethod();
 	//GET
 	if(req_parser.getMethod()=="GET"){
+		mylog.writeNewRequest(id, req_parser.getfirstline(), ip);
 		cout<<"***enter GET*****"<<endl;
 		handler.handleGET(client_fd,req_parser,id);
 	}
 	//POST
 	else if(req_parser.getMethod()=="POST"){
+		mylog.writeNewRequest(id, req_parser.getfirstline(), ip);
 		cout<<"***enter POST*****"<<endl;
 		handler.handlePOST(client_fd,req_parser,id);
 	}
 	//CONNECT
 	else if(req_parser.getMethod()=="CONNECT"){
-	  mylog.writeRequest(id, req_parser.getfirstline(), ip);
+	  	mylog.writeNewRequest(id, req_parser.getfirstline(), ip);
 		cout<<"***enter CONNECT*****"<<endl;
 		handler.handleCONNECT(client_fd,req_parser,id);
 	}

@@ -2,6 +2,8 @@
 
 void ResponseParser::parseHeader(){
 	
+	size_t end_of_lineone = header.find_first_of("\r\n");
+	first_line = header.substr(0, end_of_lineone);
 	//parse status code
 	size_t status_end = header.find_first_of("\r\n");
 	size_t status_begin = header.find_first_of(" ") + 1;

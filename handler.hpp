@@ -13,6 +13,7 @@
 #include <vector>
 #include "request_parser.hpp"
 #include "response_parser.hpp"
+#include "log.hpp"
 using namespace std;
 
 class Handler{

@@ -1,7 +1,7 @@
 #ifndef __REQUEST_PARSER__
 #define __REQUEST_PARSER__
 #include "cache.hpp"
-#include "log.hpp"
+//#include "log.hpp"
 //#include "proxy.hpp"
 #include <cstdlib>
 #include <iostream>

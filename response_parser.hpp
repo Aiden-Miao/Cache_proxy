@@ -30,6 +30,7 @@ public:
 	string last_modified; //last modified time
 	string E_tag;
 	string age;
+	string first_line; 
 
 	bool is_chunked;//the chunk for get
 	int status_valid; //use to determine if failed
@@ -49,6 +50,7 @@ public:
 										last_modified(""),
 										E_tag(""),
 										age(""),
+										first_line(""),
 										is_chunked(false),
 										status_valid(0)
 										//content_length(0),
@@ -66,6 +68,7 @@ public:
 										last_modified(""),
 										E_tag(""),
 										age(""),
+										first_line(""),
 										is_chunked(false),
 										status_valid(0)
 										//content_length(0),
@@ -75,6 +78,7 @@ public:
 	string getContent(){return content;}
 	string getStatus(){return status;}
 	string getResponse(){return response;}
+	string getfirstline(){return first_line;}
 	bool getIsChunked(){return is_chunked;}
 	void parseHeader();
 	void addContent(string content);
