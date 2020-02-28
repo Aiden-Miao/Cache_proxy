@@ -24,11 +24,12 @@ void workHorse(int client_fd, size_t id){
 	cout<<"++++Thread id = "<<id<<" Header ends++++"<<endl;
 
 	//log mylog = new log();//create new log
-	log mylog;
+	//log mylog;
 
 	//get my ip
 	struct hostent *host_entry;
 	char myhostname[512];
+	memset(myhostname,0,512);
   	gethostname(myhostname, sizeof(myhostname));
   	host_entry = gethostbyname(myhostname);
   	char *ip = inet_ntoa(*((struct in_addr *)host_entry->h_addr_list[0]));
