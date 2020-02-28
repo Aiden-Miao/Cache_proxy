@@ -55,6 +55,21 @@ public:
 										status_valid(0)
 										//content_length(0),
 										{}
+	ResponseParser(const ResponseParser & rhs):header(rhs.header),
+										content_length(rhs.content_length),
+										content(rhs.content),
+										response(rhs.response),
+										status(rhs.status),
+										status_num(rhs.status_num),
+										cache_control(rhs.cache_control),
+										expire(rhs.expire),
+										date(rhs.date),
+										last_modified(rhs.last_modified),
+										E_tag(rhs.E_tag),
+										age(rhs.age),
+										first_line(rhs.first_line),
+										is_chunked(rhs.is_chunked),
+										status_valid(rhs.status_valid){}
 
   ResponseParser(string recv_header):	header(recv_header),
 										content_length("0"),
@@ -78,7 +93,7 @@ public:
 	string getContent(){return content;}
 	string getStatus(){return status;}
 	string getResponse(){return response;}
-	string getfirstline(){return first_line;}
+	string getFirstline(){return first_line;}
 	bool getIsChunked(){return is_chunked;}
 	void parseHeader();
 	void addContent(string content);

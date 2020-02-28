@@ -125,7 +125,7 @@ int main(){
 			thread new_thread(workHorse,client_fd,id); // lack of cache
 			id++;
 			new_thread.detach();
-			sleep(1);
+			//sleep(1);
 			cout<<"Thread id = "<<id<<" detached!"<<endl;
 		}
 		catch(exception & e){
