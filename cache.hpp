@@ -14,7 +14,7 @@
 #include"response_parser.hpp"
 using namespace std;
 class Cache{
-	map<string,ResponseParser> mymap; //<request_line,resp_parser>
+	map<string, ResponseParser> mymap; //<request_line,resp_parser>
 	int capacity;	// max size
 	int size;		// current size
 public:

@@ -21,9 +21,11 @@ void workHorse(int client_fd, size_t id){
 	cout<<header<<endl;
 	cout<<"++++Thread id = "<<id<<" Header ends++++"<<endl;
 
-	log mylog = new log();//create new log
+	//log mylog = new log();//create new log
+	log mylog;
 
 	//get my ip
+	struct hostent *host_entry;
 	char myhostname[512];
   	gethostname(myhostname, sizeof(myhostname));
   	host_entry = gethostbyname(myhostname);
@@ -43,7 +45,7 @@ void workHorse(int client_fd, size_t id){
 	}
 	//CONNECT
 	else if(req_parser.getMethod()=="CONNECT"){
-		mylog.writeRequest(req_parser.getfirstline(), id, ip);
+	  mylog.writeRequest(id, req_parser.getfirstline(), ip);
 		cout<<"***enter CONNECT*****"<<endl;
 		handler.handleCONNECT(client_fd,req_parser,id);
 	}

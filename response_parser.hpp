@@ -1,7 +1,7 @@
 #ifndef __RESPONSE_PARSER__
 #define __RESPONSE_PARSER__
-#include "cache.hpp"
-#include "proxy.hpp"
+//#include "cache.hpp"
+//#include "proxy.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <map>
@@ -35,9 +35,26 @@ public:
 	int status_valid; //use to determine if failed
 	//int age; //time existed in cache
 	//int content_length; //length of content
+	//constructor;
 
-	//constructor
-	ResponseParser(string recv_header):	header(recv_header),
+  ResponseParser():	header(""),
+										content_length("0"),
+										content(""),
+										response(""),
+										status(""),
+										status_num(""),
+										cache_control(""),
+										expire(""),
+										date(""),
+										last_modified(""),
+										E_tag(""),
+										age(""),
+										is_chunked(false),
+										status_valid(0)
+										//content_length(0),
+										{}
+
+  ResponseParser(string recv_header):	header(recv_header),
 										content_length("0"),
 										content(""),
 										response(recv_header),
