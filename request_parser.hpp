@@ -36,6 +36,7 @@ public:
 	string getWebPort(){return web_port;}
 	string getContentLength(){return content_length;}
 	string getContent(){return content;}
+	string getRequest(){return request;}// 2.27 4:47pm add
 	bool getIsChunked(){return is_chunked;}
 	void addContent(string content);
 	void parseHeader();

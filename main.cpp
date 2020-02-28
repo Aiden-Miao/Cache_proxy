@@ -16,6 +16,9 @@ void workHorse(int client_fd, size_t id){
 	string header = handler.receiveHeader(client_fd);
 	RequestParser req_parser(header);
 	req_parser.parseHeader();
+	cout<<"++++Thread id = "<<id<<"++++";
+	cout<<header<<endl;
+	cout<<"++++Thread id = "<<id<<" Header ends++++"<<endl;
 	// determine the value of req_parser.getMethod();
 	//GET
 	if(req_parser.getMethod()=="GET"){
@@ -33,10 +36,7 @@ void workHorse(int client_fd, size_t id){
 		handler.handleCONNECT(client_fd,req_parser,id);
 	}
 	// error
-	else{
-		return;
-	}
-
+	//exit(EXIT_SUCCESS);
 }
 // void test(Proxy &proxy){
 // 	proxy.acceptConnection();
@@ -93,10 +93,11 @@ int main(){
 	size_t id = 0;
 	signal(SIGPIPE,SIG_IGN);
 	while(true){
-		cout<<"****Before acceptConnection****"<<endl;
+		cout<<"****Before acceptConnection****"<<"Thread id = "<<id<<endl;
 		int client_fd = proxy.acceptConnection(); 
-		cout<<"****After acceptConnection****"<<endl;
+		cout<<"****After acceptConnection****"<<"Thread id = "<<id<<endl;
 		if(client_fd==-1){
+			cout<<"Thread id = "<<id<<", acceptConnection failed!"<<endl;
 			continue;
 		}
 		try{
@@ -104,6 +105,7 @@ int main(){
 			thread new_thread(workHorse,client_fd,id); // lack of cache
 			id++;
 			new_thread.detach();
+			cout<<"Thread id = "<<id<<" detached!"<<endl;
 		}
 		catch(exception & e){
 			cout<<e.what()<<endl;

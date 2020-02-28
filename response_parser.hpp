@@ -57,6 +57,7 @@ public:
 	string getContentLength(){return content_length;}
 	string getContent(){return content;}
 	string getStatus(){return status;}
+	string getResponse(){return response;}
 	bool getIsChunked(){return is_chunked;}
 	void parseHeader();
 	void addContent(string content);
