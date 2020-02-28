@@ -34,9 +34,9 @@ public:
 	string recvChunkedContent(int fd);
 
 
-	void handleGET(int client_fd,RequestParser &req_parser, size_t id);
-	void handlePOST(int client_fd,RequestParser &req_parser, size_t id);
-	void handleCONNECT(int client_fd,RequestParser &req_parser, size_t id);
+	void handleGET(int client_fd,RequestParser req_parser, size_t id);
+	void handlePOST(int client_fd,RequestParser req_parser, size_t id);
+	void handleCONNECT(int client_fd,RequestParser req_parser, size_t id);
 	Handler():webserver_fd(-1),webserver_port(NULL){}
 	~Handler(){
 		if(webserver_fd!=-1){

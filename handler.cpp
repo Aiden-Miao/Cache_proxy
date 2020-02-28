@@ -112,7 +112,7 @@ string Handler::receiveContent(int fd,int content_length){
   return ans;
 }
 
-void Handler::handleGET(int client_fd, RequestParser &req_parser, size_t id){
+void Handler::handleGET(int client_fd, RequestParser req_parser, size_t id){//should this be refrence?
   if(req_parser.getContentLength()!="0"){
     //cout<<"*****Enter recv normal content*****"<<endl;
     stringstream ss;
@@ -169,7 +169,7 @@ void Handler::handleGET(int client_fd, RequestParser &req_parser, size_t id){
 
 }
 
-void Handler::handlePOST(int client_fd,RequestParser &req_parser, size_t id){
+void Handler::handlePOST(int client_fd,RequestParser req_parser, size_t id){ //should this be refrence?
   if(req_parser.getContentLength()!="0"){ //normal content
     stringstream ss;
     ss<<req_parser.getContentLength();
@@ -237,7 +237,7 @@ void Handler::handlePOST(int client_fd,RequestParser &req_parser, size_t id){
   
 }
 
-void Handler::handleCONNECT(int client_fd,RequestParser &req_parser, size_t id){
+void Handler::handleCONNECT(int client_fd,RequestParser req_parser, size_t id){//should this be refrence?
   //cout<<"In CONNECT, web hostname = "<<req_parser.getWebHostname()<<" ,web port = "<<req_parser.getWebPort();
   if(req_parser.getWebHostname()==""){
     return;
