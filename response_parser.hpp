@@ -94,6 +94,12 @@ public:
 	string getStatus(){return status;}
 	string getResponse(){return response;}
 	string getFirstline(){return first_line;}
+	string getCacheControl(){return cache_control;}
+	string getEtag(){return E_tag;}
+	string getExpire(){return expire;}
+	string getDate(){return date;}
+	string getLastModified(){return last_modified;}
+	string age(){return age;}
 	bool getIsChunked(){return is_chunked;}
 	void parseHeader();
 	void addContent(string content);

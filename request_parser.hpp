@@ -40,7 +40,7 @@ public:
 	string getContentLength(){return content_length;}
 	string getContent(){return content;}
 	string getRequest(){return request;}// 2.27 4:47pm add
-	string getfirstline(){return first_line;}
+	string getFirstline(){return first_line;}
 	bool getIsChunked(){return is_chunked;}
 	void addContent(string content);
 	void parseHeader();

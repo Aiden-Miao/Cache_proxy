@@ -11,6 +11,8 @@
 #include "log.hpp"
 using namespace std;
 
+log mylog;
+
 void workHorse(int client_fd, size_t id){
 	cout<<"accept connection success! Thread id = "<<id<<endl;
 	Handler handler;

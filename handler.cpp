@@ -44,6 +44,7 @@ void Handler::connectWebServer(const char *hostname, const char * port){
     //cerr << "  (" << hostname << "," << port << ")" << endl;
     exit(EXIT_FAILURE);
   } //if
+  freeaddrinfo(remote_info_list);
 }//connect to webserver
 
 void Handler::sendToFd(int fd,string to_send){
@@ -244,13 +245,10 @@ void Handler::handleCONNECT(int client_fd,RequestParser req_parser, size_t id){/
   if(req_parser.getWebHostname()==""){
     return;
   }
-  cout<<"=======1"<<endl;
   connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
-  cout<<"=======2"<<endl;
-  //cout<<"Connect web server success! id = "<<id<<endl;
   string success_msg = "HTTP/1.1 200 OK\r\n\r\n";
   sendToFd(client_fd,success_msg);
-  cout<<"=======3"<<endl;
+  
   int status = 0;
   fd_set readfds;
   int fdmax = max(client_fd,getWebServerFd());
@@ -304,9 +302,6 @@ string Handler::recvChunkedContent(int fd){
       if (buf.back() == '\n' && buf[buf.size() - 2] == '\r' &&
           buf[buf.size() - 3] == '\n' &&
           buf[buf.size() - 4] == '\r' && buf[buf.size() - 5] == '0') {
-          cout<<"****Encounter 0,r,n******"<<endl;
-          // std::cout << "GOT HEADER!" << std::endl;
-          //find = 1;
           break;
       }
     }

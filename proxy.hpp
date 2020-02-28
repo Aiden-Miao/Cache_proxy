@@ -55,7 +55,7 @@ public:
 		close(client_fd);
 		close(listen_fd);
 		if(host_info_list){
-		freeaddrinfo(host_info_list);
+			freeaddrinfo(host_info_list);
 		}
 		// if(remote_info_list){
 		// 	freeaddrinfo(remote_info_list);
