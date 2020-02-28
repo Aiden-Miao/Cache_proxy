@@ -99,7 +99,7 @@ public:
 	string getExpire(){return expire;}
 	string getDate(){return date;}
 	string getLastModified(){return last_modified;}
-	string age(){return age;}
+	string getAge(){return age;}
 	bool getIsChunked(){return is_chunked;}
 	void parseHeader();
 	void addContent(string content);

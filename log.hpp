@@ -35,27 +35,27 @@ public:
 		file.close();
 	}
 	// from proxy to web server
-	void writeRequestWebserver(size_t thread_id, RequestParser web_request){
-		string web_hostname = web_request.getWebHostname();
-		string request_content = web_request.getFirstline();
+	void writeRequestWebserver(size_t thread_id, RequestParser req_parser){
+		string web_hostname = req_parser.getWebHostname();
+		string request_content = req_parser.getFirstline();
 		ofstream file;
 		file.open("proxy.log", ios::app|ios::out);
 		file << thread_id << " : " << '"'<< " Requesting " << request_content << " from " << web_hostname<< endl;
 		file.close();
 	}
 	// from webserver to proxy
-	void writeResponseWebserver(size_t thread_id, ResponseParser web_response){
-		string web_hostname = web_response.getWebHostname();
-		string response_content = web_response.getFirstline();
+	void writeResponseWebserver(size_t thread_id, RequestParser req_parser,ResponseParser resp_parser){
+		string web_hostname = req_parser.getWebHostname();
+		string response_content = resp_parser.getFirstline();
 		ofstream file;
 		file.open("proxy.log", ios::app|ios::out);
 		file << thread_id << " : " << '"'<< " Received " << response_content << " from " << web_hostname<< endl;
 		file.close();	
 	}
 	// from proxy to client
-	void writeResponseClient(size_t thread_id, ResponseParser client_response){
+	void writeResponseClient(size_t thread_id, ResponseParser resp_parser){
 		//string web_hostname = client_response.getWebHostname();
-		string response_content = client_response.getFirstline();
+		string response_content = resp_parser.getFirstline();
 		ofstream file;
 		file.open("proxy.log", ios::app|ios::out);
 		file << thread_id << " : " << '"'<< " Responding " << response_content << endl;
