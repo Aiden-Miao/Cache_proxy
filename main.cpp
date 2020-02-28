@@ -16,7 +16,7 @@ void workHorse(int client_fd, size_t id){
 	string header = handler.receiveHeader(client_fd);
 	RequestParser req_parser(header);
 	req_parser.parseHeader();
-	cout<<"++++Thread id = "<<id<<"++++";
+	cout<<"++++Thread id = "<<id<<"++++"<<endl;
 	cout<<header<<endl;
 	cout<<"++++Thread id = "<<id<<" Header ends++++"<<endl;
 	// determine the value of req_parser.getMethod();
