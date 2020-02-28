@@ -35,6 +35,7 @@ void workHorse(int client_fd, size_t id){
 		cout<<"***enter CONNECT*****"<<endl;
 		handler.handleCONNECT(client_fd,req_parser,id);
 	}
+	close(client_fd);
 	// error
 	//exit(EXIT_SUCCESS);
 }
@@ -93,8 +94,11 @@ int main(){
 	size_t id = 0;
 	signal(SIGPIPE,SIG_IGN);
 	while(true){
+
 		cout<<"****Before acceptConnection****"<<"Thread id = "<<id<<endl;
+		
 		int client_fd = proxy.acceptConnection(); 
+
 		cout<<"****After acceptConnection****"<<"Thread id = "<<id<<endl;
 		if(client_fd==-1){
 			cout<<"Thread id = "<<id<<", acceptConnection failed!"<<endl;
@@ -105,6 +109,7 @@ int main(){
 			thread new_thread(workHorse,client_fd,id); // lack of cache
 			id++;
 			new_thread.detach();
+			sleep(1);
 			cout<<"Thread id = "<<id<<" detached!"<<endl;
 		}
 		catch(exception & e){

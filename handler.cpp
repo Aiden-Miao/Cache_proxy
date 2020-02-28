@@ -58,7 +58,7 @@ void Handler::sendToFd(int fd,string to_send){
       break;
     }
   }
-  //assert(nbytes==total_size);
+  assert(nbytes==total_size);
 }
 
 string Handler::receiveHeader(int fd){
@@ -192,6 +192,7 @@ void Handler::handlePOST(int client_fd,RequestParser req_parser, size_t id){ //s
     }
   }
 
+  cout<<"*******the post request is "<<req_parser.getRequest()<<"***********"<<endl;
   connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
   
   //sendToFd(getWebServerFd(),req_parser.getHeader());
