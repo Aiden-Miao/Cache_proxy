@@ -1,6 +1,9 @@
 #include "request_parser.hpp"
 
 void RequestParser::parseHeader(){
+	//find the first line
+	size_t end_of_lineone = header.find_first_of("\r\n");
+	first_line = header.substr(0, end_of_lineone);
 	//find the end of first line,find the first space on first line, get the method
 	size_t line_one_space = header.find_first_of(" ");
 	method = header.substr(0,line_one_space);

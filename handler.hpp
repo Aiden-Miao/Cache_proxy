@@ -33,7 +33,6 @@ public:
 	void loopSend(vector<char> & recv_buf, int fd, int byte_size);
 	string recvChunkedContent(int fd);
 
-
 	void handleGET(int client_fd,RequestParser req_parser, size_t id);
 	void handlePOST(int client_fd,RequestParser req_parser, size_t id);
 	void handleCONNECT(int client_fd,RequestParser req_parser, size_t id);

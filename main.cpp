@@ -8,6 +8,7 @@
 #include<exception>
 #include<thread>
 #include<csignal>
+#include "log.hpp"
 using namespace std;
 
 void workHorse(int client_fd, size_t id){
@@ -19,6 +20,16 @@ void workHorse(int client_fd, size_t id){
 	cout<<"++++Thread id = "<<id<<"++++"<<endl;
 	cout<<header<<endl;
 	cout<<"++++Thread id = "<<id<<" Header ends++++"<<endl;
+
+	log mylog = new log();//create new log
+
+	//get my ip
+	char myhostname[512];
+  	gethostname(myhostname, sizeof(myhostname));
+  	host_entry = gethostbyname(myhostname);
+  	char *ip = inet_ntoa(*((struct in_addr *)host_entry->h_addr_list[0]));
+
+
 	// determine the value of req_parser.getMethod();
 	//GET
 	if(req_parser.getMethod()=="GET"){
@@ -32,6 +43,7 @@ void workHorse(int client_fd, size_t id){
 	}
 	//CONNECT
 	else if(req_parser.getMethod()=="CONNECT"){
+		mylog.writeRequest(req_parser.getfirstline(), id, ip);
 		cout<<"***enter CONNECT*****"<<endl;
 		handler.handleCONNECT(client_fd,req_parser,id);
 	}

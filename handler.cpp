@@ -11,6 +11,7 @@
 #include<sstream>
 #include<exception>
 #include<assert.h>
+#include"log.hpp"
 using namespace std;
 
 void Handler::connectWebServer(const char *hostname, const char * port){

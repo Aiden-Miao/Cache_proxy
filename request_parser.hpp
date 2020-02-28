@@ -1,6 +1,7 @@
 #ifndef __REQUEST_PARSER__
 #define __REQUEST_PARSER__
 #include "cache.hpp"
+#include "log.hpp"
 //#include "proxy.hpp"
 #include <cstdlib>
 #include <iostream>
@@ -13,6 +14,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <vector>
+
 using namespace std;
 class RequestParser{
 private:
@@ -24,11 +26,12 @@ private:
 	string content_length; // length of the content
 	string content;
 	string request;//the whole request
+	string first_line;//add Feb.28 11:31 AM
 	bool is_chunked;// indicates the request is chunked or not
 
 public:
 	RequestParser(string recv_header):header(recv_header),web_hostname(""),web_port("80"),
-				 content_length("0"),content(""),request(recv_header),is_chunked(false){}
+				 content_length("0"),content(""),request(recv_header),first_line(""),is_chunked(false){}
 	string getHeader(){return header;}
 	string getMethod(){return method;}
 	string getUrl(){return url;}
@@ -37,6 +40,7 @@ public:
 	string getContentLength(){return content_length;}
 	string getContent(){return content;}
 	string getRequest(){return request;}// 2.27 4:47pm add
+	string getfirstline(){return first_line;}
 	bool getIsChunked(){return is_chunked;}
 	void addContent(string content);
 	void parseHeader();
