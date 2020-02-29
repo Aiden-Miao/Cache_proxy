@@ -33,8 +33,9 @@ public:
 	int loopRecv(vector<char> & recv_buf,int fd);
 	void loopSend(vector<char> & recv_buf, int fd, int byte_size);
 	string recvChunkedContent(int fd);
-
-	void handleGET(int client_fd,RequestParser req_parser, size_t id);
+	string revalidate(RequestParser req_parser, ResponseParser saved_response);
+	void recvEntireResponse(ResponseParser &resp_parser,int client_fd);
+	void handleGET(int client_fd,RequestParser req_parser, size_t id, Cache & mycache);
 	void handlePOST(int client_fd,RequestParser req_parser, size_t id);
 	void handleCONNECT(int client_fd,RequestParser req_parser, size_t id);
 	Handler():webserver_fd(-1),webserver_port(NULL){}

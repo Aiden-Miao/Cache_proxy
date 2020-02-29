@@ -9,6 +9,7 @@
 #include<sys/time.h>
 #include<time.h>
 #include<sstream>
+#include<fstream>
 #include<exception>
 #include<assert.h>
 #include"log.hpp"
@@ -55,7 +56,7 @@ void Handler::sendToFd(int fd,string to_send){
   int nbytes = 0;
   while(true){
     nbytes += send(fd,to_send.substr(nbytes).c_str(),total_size-nbytes,0);
-    cout<<"Send "<<nbytes<<" Bytes"<<endl;
+    //cout<<"Send "<<nbytes<<" Bytes"<<endl;
     if(nbytes==total_size){
       break;
     }
@@ -114,7 +115,38 @@ string Handler::receiveContent(int fd,int content_length){
   return ans;
 }
 
-void Handler::handleGET(int client_fd, RequestParser req_parser, size_t id){//should this be refrence?
+void Handler::recvEntireResponse(ResponseParser &resp_parser,int client_fd){
+  if(resp_parser.getContentLength()!="0"){ //content length
+    stringstream ss;
+    ss<<resp_parser.getContentLength();
+    int response_content_len;
+    ss>>response_content_len;
+    string content = receiveContent(getWebServerFd(),response_content_len);
+    resp_parser.addContent(content);
+    //sendToFd(client_fd,resp_parser.getResponse());
+  }
+  else if(resp_parser.getIsChunked()){  //chunked
+    string content = recvChunkedContent(webserver_fd);
+    //cout<<"****nmsl****"<<endl;
+    //cout<<content<<endl;
+    resp_parser.addContent(content);
+    //sendToFd(client_fd,resp_parser.getResponse());
+  }
+  else{
+    //sendToFd(client_fd,resp_parser.getResponse());
+    vector<char> recv_buf(1024,0);
+    int nbytes = loopRecv(recv_buf,getWebServerFd());
+    if(nbytes > 0){
+      string content(recv_buf.begin(),recv_buf.end());
+      resp_parser.addContent(content);
+    }
+  }
+  //sendToFd(client_fd,resp_parser.getResponse());
+}
+
+void Handler::handleGET(int client_fd, RequestParser req_parser, size_t id,Cache & mycache){//should this be refrence?
+  ofstream file;
+  file.open("/var/log/erss/proxy.log", ios::app|ios::out);
   if(req_parser.getContentLength()!="0"){
     //cout<<"*****Enter recv normal content*****"<<endl;
     stringstream ss;
@@ -123,52 +155,144 @@ void Handler::handleGET(int client_fd, RequestParser req_parser, size_t id){//sh
     ss>>content_length;
     string content = receiveContent(client_fd,content_length);
     req_parser.addContent(content);
-    //cout<<"After addContent, content is:\n"<<req_parser.getContent()<<endl;
   }
-
-  connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
-  sendToFd(getWebServerFd(),req_parser.getRequest());
-  // sendToFd(getWebServerFd(),req_parser.getHeader());
-  // sendToFd(getWebServerFd(),req_parser.getContent());
-  
-  string response_header = receiveHeader(getWebServerFd());
-  cout<<"This is response_header\n"<<response_header;
-  ResponseParser resp_parser(response_header);
-  resp_parser.parseHeader();
-
-  if(resp_parser.getContentLength()!="0"){ //content length
-    stringstream ss;
-    ss<<resp_parser.getContentLength();
-    int response_content_len;
-    ss>>response_content_len;
-    string content = receiveContent(getWebServerFd(),response_content_len);
-    resp_parser.addContent(content);
-    // sendToFd(client_fd,resp_parser.getHeader());
-    // sendToFd(client_fd,resp_parser.getContent());
+  string request_line = req_parser.getFirstline();
+  ResponseParser * resp_ptr = mycache.get(request_line);
+  // not in cache
+  if(resp_ptr == NULL){
+    //cout<<"****Into not in cache****"<<id<<endl;
+    //connect server
+    connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
+    //send entire request
+    sendToFd(getWebServerFd(),req_parser.getRequest());
+    //recv server response's header
+    string response_header = receiveHeader(getWebServerFd());
+    ResponseParser resp_parser(response_header);
+    resp_parser.parseHeader();
+      //if cacheable, put into cache
+    recvEntireResponse(resp_parser,client_fd);
+    if(resp_parser.getCacheable()==true){
+      mycache.put(request_line,resp_parser);
+    }
+    //send back to client
     sendToFd(client_fd,resp_parser.getResponse());
-  }
-  else if(resp_parser.getIsChunked()){  //chunked
-    string content = recvChunkedContent(webserver_fd);
-    //cout<<"****nmsl****"<<endl;
-    //cout<<content<<endl;
-    resp_parser.addContent(content);
-    sendToFd(client_fd,resp_parser.getResponse());
-    // sendToFd(client_fd,resp_parser.getHeader());
-    // sendToFd(client_fd,resp_parser.getContent());
+    return;
   }
   else{
-    //sendToFd(client_fd,resp_parser.getResponse());
-    vector<char> recv_buf(1024,0);
-    int nbytes = loopRecv(recv_buf,getWebServerFd());
-    if(nbytes==0){
-      sendToFd(client_fd,resp_parser.getResponse());
+    assert(resp_ptr!=NULL);
+    //cout<<"$$$$$$$$$$$$$response in cache: \n"<<resp_ptr->getResponse()<<endl;
+    time_t cur_time = time(NULL);
+    time_t exp_time = 0;
+    if(resp_ptr->getExpire().size()!=0 && stoi(resp_ptr->getExpire())>0 ){ // has expire info
+      //cout<<"++++++++++++++++"<<resp_ptr->getExpire()<<"++++++++++++"<<endl;
+      struct tm expire_time;
+      memset(&expire_time,0,sizeof(struct tm));
+      strptime(resp_ptr->getExpire().c_str(),"%a, %d %b %Y %H:%M:%S GMT",&expire_time);
+      exp_time = mktime(&expire_time);
+      //cout<<"exp_time = "<<exp_time<<endl;
     }
-    else{
-      sendToFd(client_fd,resp_parser.getResponse());
-      loopSend(recv_buf,client_fd,nbytes);
+    if(resp_ptr->getAge()!="" && resp_ptr->getDate()!=""){
+      struct tm create_time;
+      memset(&create_time,0,sizeof(struct tm));
+      strptime(resp_ptr->getDate().c_str(),"%a, %d %b %Y %H:%M:%S GMT",&create_time);
+      time_t cre_time = mktime(&create_time);
+      //cout<<"@@@@@@@getAge():\n"<<resp_ptr->getAge()<<endl;
+      //cout<<"@@@@@@@getDate():\n"<<resp_ptr->getDate()<<endl;
+      exp_time = cre_time + stoi(resp_ptr->getAge());
     }
+    if(exp_time!=0&&exp_time<cur_time){
+      //cout<<"****Into expire****"<<id<<endl;
+      //1. expire, 
+      //connect server
+      string new_request = revalidate(req_parser,*resp_ptr);
+      connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
+      //recv server new response
+      sendToFd(getWebServerFd(),new_request);
+      string response_header = receiveHeader(getWebServerFd());
+      ResponseParser new_resp_parser(response_header);
+      new_resp_parser.parseHeader();
+      string resp_firstline = new_resp_parser.getFirstline();
+        //if 304, get from cache and send
+      if(resp_firstline.find("304")!=string::npos){ //if 304
+        sendToFd(client_fd,resp_ptr->getResponse());
+        return;
+      }
+        //else, send new response
+      recvEntireResponse(new_resp_parser,client_fd);
+      sendToFd(client_fd,new_resp_parser.getResponse());
+      return;
+    }
+    //2. revalidate
+    if(resp_ptr->getMustRevalidate()==true){
+      //cout<<"****Into revalidate****"<<id<<endl;
+      //connect server
+      string new_request = revalidate(req_parser,*resp_ptr);
+      connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
+      sendToFd(getWebServerFd(),new_request);
+      //recv server new response
+      string response_header = receiveHeader(getWebServerFd());
+      ResponseParser new_resp_parser(response_header);
+      new_resp_parser.parseHeader();
+      string resp_firstline = new_resp_parser.getFirstline();
+        //if 304, get from cache and send
+      if(resp_firstline.find("304")!=string::npos){ //if 304
+        sendToFd(client_fd,resp_ptr->getResponse());
+        return;
+      }
+        //else, send new response
+      recvEntireResponse(new_resp_parser,client_fd);
+      sendToFd(client_fd,new_resp_parser.getResponse());
+      return;
+    }
+    //3. normal
+    //cout<<"****Into normal****"<<id<<endl;
+      //get from cache and send back
+    sendToFd(client_fd,resp_ptr->getResponse());
+    return;
   }
 
+
+
+  // connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
+  // sendToFd(getWebServerFd(),req_parser.getRequest());
+  // // sendToFd(getWebServerFd(),req_parser.getHeader());
+  // // sendToFd(getWebServerFd(),req_parser.getContent());
+  
+  // string response_header = receiveHeader(getWebServerFd());
+  // cout<<"This is response_header\n"<<response_header;
+  // ResponseParser resp_parser(response_header);
+  // resp_parser.parseHeader();
+
+  // // 
+
+  // sendEntireResponse(resp_parser,client_fd);
+
+  // if(resp_parser.getContentLength()!="0"){ //content length
+  //   stringstream ss;
+  //   ss<<resp_parser.getContentLength();
+  //   int response_content_len;
+  //   ss>>response_content_len;
+  //   string content = receiveContent(getWebServerFd(),response_content_len);
+  //   resp_parser.addContent(content);
+  //   //sendToFd(client_fd,resp_parser.getResponse());
+  // }
+  // else if(resp_parser.getIsChunked()){  //chunked
+  //   string content = recvChunkedContent(webserver_fd);
+  //   //cout<<"****nmsl****"<<endl;
+  //   //cout<<content<<endl;
+  //   resp_parser.addContent(content);
+  //   //sendToFd(client_fd,resp_parser.getResponse());
+  // }
+  // else{
+  //   //sendToFd(client_fd,resp_parser.getResponse());
+  //   vector<char> recv_buf(1024,0);
+  //   int nbytes = loopRecv(recv_buf,getWebServerFd());
+  //   if(nbytes > 0){
+  //     string content(recv_buf.begin(),recv_buf.end());
+  //     resp_parser.addContent(content);
+  //   }
+  // }
+  // sendToFd(client_fd,resp_parser.getResponse());
 }
 
 void Handler::handlePOST(int client_fd,RequestParser req_parser, size_t id){ //should this be refrence?
@@ -194,7 +318,7 @@ void Handler::handlePOST(int client_fd,RequestParser req_parser, size_t id){ //s
     }
   }
 
-  cout<<"*******the post request is "<<req_parser.getRequest()<<"***********"<<endl;
+  //cout<<"*******the post request is "<<req_parser.getRequest()<<"***********"<<endl;
   connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
   
   //sendToFd(getWebServerFd(),req_parser.getHeader());
@@ -311,7 +435,20 @@ string Handler::recvChunkedContent(int fd){
   string ans(buf.begin(),buf.end());
   return ans;
 }
-
+string Handler::revalidate(RequestParser req_parser, ResponseParser saved_response){
+  string request = req_parser.getRequest();
+  string etag = saved_response.getEtag();
+  if(etag.size()>0){
+    request = request.substr(0,request.find("\r\n\r\n")+2);
+    request += "If-None-Match: " + etag + "\r\n\r\n";
+  }
+  string last_modified = saved_response.getLastModified();
+  if(last_modified.size()>0){
+    request = request.substr(0,request.find("\r\n\r\n")+2);
+    request += "If-Modified-Since" + last_modified + "\r\n\r\n";
+  }
+  return request;
+}
 
 int Handler::loopRecv(vector<char> & recv_buf,int fd){
   //cout<<"+++++Enter loopRecv"<<endl;

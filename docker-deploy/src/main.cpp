@@ -12,6 +12,7 @@
 using namespace std;
 
 log mylog;
+Cache mycache;
 
 void workHorse(int client_fd, size_t id){
 	cout<<"accept connection success! Thread id = "<<id<<endl;
@@ -40,7 +41,7 @@ void workHorse(int client_fd, size_t id){
 	if(req_parser.getMethod()=="GET"){
 		mylog.writeNewRequest(id, req_parser.getFirstline(), ip);
 		cout<<"***enter GET*****"<<endl;
-		handler.handleGET(client_fd,req_parser,id);
+		handler.handleGET(client_fd,req_parser,id,mycache);
 	}
 	//POST
 	else if(req_parser.getMethod()=="POST"){
@@ -114,11 +115,11 @@ int main(){
 	signal(SIGPIPE,SIG_IGN);
 	while(true){
 
-		cout<<"****Before acceptConnection****"<<"Thread id = "<<id<<endl;
+		//cout<<"****Before acceptConnection****"<<"Thread id = "<<id<<endl;
 		
 		int client_fd = proxy.acceptConnection(); 
 
-		cout<<"****After acceptConnection****"<<"Thread id = "<<id<<endl;
+		//cout<<"****After acceptConnection****"<<"Thread id = "<<id<<endl;
 		if(client_fd==-1){
 			cout<<"Thread id = "<<id<<", acceptConnection failed!"<<endl;
 			continue;
@@ -129,7 +130,7 @@ int main(){
 			id++;
 			new_thread.detach();
 			//sleep(1);
-			cout<<"Thread id = "<<id<<" detached!"<<endl;
+			//cout<<"Thread id = "<<id<<" detached!"<<endl;
 		}
 		catch(exception & e){
 			cout<<e.what()<<endl;

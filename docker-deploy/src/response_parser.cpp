@@ -9,11 +9,13 @@ void ResponseParser::parseHeader(){
 	size_t status_begin = header.find_first_of(" ") + 1;
 	size_t status_len = status_end - status_begin;
 	status = header.substr(status_begin, status_len);
-	cout<<"Status = "<<status<<endl;
+	//cout<<"Status = "<<status<<endl;
 	//parse status number
 	status_num = header.substr(status_begin, 3);
 
-	
+	if(first_line.find("200")!=string::npos){
+		cacheable = true;
+	}
 	//parse cache_control
 	size_t cache_control_begin;
 	if((cache_control_begin = header.find("Cache-Control:")) != string::npos){
@@ -21,7 +23,35 @@ void ResponseParser::parseHeader(){
 		size_t cache_control_end = header.find("\r\n", cache_control_begin);
 		size_t cache_control_len = cache_control_end - cache_control_begin;
 		cache_control = header.substr(cache_control_begin, cache_control_len);
+
+		if(cache_control.find("private")!=string::npos || cache_control.find("no-store")!=string::npos){
+			if(cache_control.find("private")!=string::npos){
+				privated = true;
+				no_store = false;
+			}
+			if(cache_control.find("no-store")!=string::npos){
+				privated = false;
+				no_store = true;
+			}
+			cacheable = false;
+		}
+		else{
+			cacheable = true;
+		}
+
+		if(cache_control.find("must-revalidate")!=string::npos||cache_control.find("no-cache")!=string::npos){
+			must_revalidate = true;
+		}
+		if(cache_control.find("max-age")!=string::npos){
+			string s_age = cache_control.substr(cache_control.find("max-age=")+8);
+			if(s_age.find(",")!=string::npos){
+				s_age = s_age.substr(0,s_age.find_first_of(","));
+			}
+			age = s_age;
+		}
 	}
+
+
 	
 	//parse expire
 	size_t expire_begin;
@@ -81,11 +111,9 @@ void ResponseParser::parseHeader(){
 	//find age in cache-control
 
 	//size_t age_begin = cache_control.find("max-age=");
-	size_t age_begin;
+	//size_t age_begin;
 	
-	if((age_begin=cache_control.find("max-age="))!=string::npos){
-		age = cache_control.substr(age_begin);
-	}
+	
 	//cout<<"age_begin = "<<age_begin<<endl;
 	//age = cache_control.substr(age_begin);
 }	

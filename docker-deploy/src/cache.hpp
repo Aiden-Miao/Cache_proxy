@@ -18,8 +18,8 @@ class Cache{
 	int capacity;	// max size
 	int size;		// current size
 public:
-	Cache():capacity(4),size(0){}
-	Cache(int capacity):capacity(capacity),size(0){}
+	Cache():capacity(32),size(0){}
+	Cache(int cap):capacity(cap),size(0){}
 	~Cache(){}
 	int getCapacity(){return capacity;}
 	int getSize(){return size;}

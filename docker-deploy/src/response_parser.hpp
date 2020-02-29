@@ -34,6 +34,10 @@ public:
 
 	bool is_chunked;//the chunk for get
 	int status_valid; //use to determine if failed
+	bool must_revalidate;
+	bool cacheable;
+	bool privated;
+	bool no_store;
 	//int age; //time existed in cache
 	//int content_length; //length of content
 	//constructor;
@@ -52,7 +56,11 @@ public:
 										age(""),
 										first_line(""),
 										is_chunked(false),
-										status_valid(0)
+										status_valid(0),
+										must_revalidate(false),
+										cacheable(false),
+										privated(false),
+										no_store(false)
 										//content_length(0),
 										{}
 	ResponseParser(const ResponseParser & rhs):header(rhs.header),
@@ -69,7 +77,11 @@ public:
 										age(rhs.age),
 										first_line(rhs.first_line),
 										is_chunked(rhs.is_chunked),
-										status_valid(rhs.status_valid){}
+										status_valid(rhs.status_valid),
+										must_revalidate(rhs.must_revalidate),
+										cacheable(rhs.cacheable),
+										privated(rhs.privated),
+										no_store(rhs.no_store){}
 
   ResponseParser(string recv_header):	header(recv_header),
 										content_length("0"),
@@ -85,7 +97,11 @@ public:
 										age(""),
 										first_line(""),
 										is_chunked(false),
-										status_valid(0)
+										status_valid(0),
+										must_revalidate(false),
+										cacheable(false),
+										privated(false),
+										no_store(false)
 										//content_length(0),
 										{}
 	string getHeader(){return header;}
@@ -101,6 +117,10 @@ public:
 	string getLastModified(){return last_modified;}
 	string getAge(){return age;}
 	bool getIsChunked(){return is_chunked;}
+	bool getMustRevalidate(){return must_revalidate;}
+	bool getCacheable(){return cacheable;}
+	bool getPrivated(){return privated;}
+	bool getNoStore(){return no_store;}
 	void parseHeader();
 	void addContent(string content);
 
