@@ -1,0 +1,15 @@
+1. In our proxy, we found that the get/post will get blocked after one successful get/post, and we couldn't figure out      why we are having this problem. 
+   Solution: After 2 days of debugging, we noticed that for some reason the destructor inside handler are not called, so the client_fd is not closed, which led to the block of our recv/send function. So we moved the fd.close() into the main function, after that everything works fine.
+
+2. When using multithread, we found that sometimes the web loading can be very slow and some times the program can crash.
+   Solution: We passed in the reference of our proxy object to the new thread, which can leads to multiple thread using the same resource at the same time. So we modified that, passing in only client_fd instead of the whole object as parameter, and the problem got solved.
+
+3. When loading the course web of class 568, the icon can not be shown.
+   Solution: We added chunk method, and the proxy is able to show the icons.
+
+4. Sometimes if we leave the proxy running for a very long time, it will crash.
+   Solution: We use valgrind to detect that it's because new() failed, so we use try/catch to deal with this problem. Also we notice that we have some memory leak in the program, so we think that after a certain amount of time, it may crash because it's full.
+
+5. Our cache-control sometimes cannot function correctly.
+   Solution: We realize that we used 'cache control == "private" or "no-store"' to decide if we need to cache, but this is wrong, because cache control may have more than one thing, so we need to use cache control.find() to decide.
+
