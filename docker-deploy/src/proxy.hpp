@@ -49,7 +49,7 @@ public:
 	// void handleCONNECT(RequestParser &req_parser, size_t id);
 
 	//Proxy():webserver_fd(-1),client_fd(-1),listen_fd(-1),hostname(NULL),proxy_port("4567"),webserver_port("80"){};
-	Proxy():client_fd(-1),listen_fd(-1),hostname(NULL),proxy_port("4567"){};
+	Proxy():client_fd(-1),listen_fd(-1),hostname(NULL),proxy_port("12345"){};
 	~Proxy(){
 		//close(webserver_fd);
 		close(client_fd);

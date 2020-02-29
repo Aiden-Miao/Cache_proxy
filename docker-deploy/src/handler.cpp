@@ -160,22 +160,29 @@ void Handler::handleGET(int client_fd, RequestParser req_parser, size_t id,Cache
   ResponseParser * resp_ptr = mycache.get(request_line);
   // not in cache
   if(resp_ptr == NULL){
+    file<<id<<": not in cache"<<endl;
     //cout<<"****Into not in cache****"<<id<<endl;
     //connect server
     connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
     //send entire request
     sendToFd(getWebServerFd(),req_parser.getRequest());
+    file<<id<<": Requesting \""<<req_parser.getFirstline()<<"\" from "<<req_parser.getWebHostname()<<endl;
     //recv server response's header
     string response_header = receiveHeader(getWebServerFd());
+    
     ResponseParser resp_parser(response_header);
+
     resp_parser.parseHeader();
+    file<<id<<": Received \""<<resp_parser.getFirstline()<<"\" from "<<req_parser.getWebHostname()<<endl;
       //if cacheable, put into cache
     recvEntireResponse(resp_parser,client_fd);
     if(resp_parser.getCacheable()==true){
       mycache.put(request_line,resp_parser);
     }
     //send back to client
+    file<<id<<": Responding \""<<resp_parser.getFirstline()<<"\" from "<<req_parser.getWebHostname()<<endl;
     sendToFd(client_fd,resp_parser.getResponse());
+    file.close();
     return;
   }
   else{
@@ -204,31 +211,45 @@ void Handler::handleGET(int client_fd, RequestParser req_parser, size_t id,Cache
       //cout<<"****Into expire****"<<id<<endl;
       //1. expire, 
       //connect server
+      file<<id<<": in cache, but expired at "<<stoi(resp_ptr->getExpire())<<endl;
       string new_request = revalidate(req_parser,*resp_ptr);
       connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
       //recv server new response
       sendToFd(getWebServerFd(),new_request);
+      size_t pos = new_request.find("\r\n");
+      string new_firstline = new_request.substr(0,pos);
+      file<<id<<": Requesting \""<<new_firstline<<"\" from "<<req_parser.getWebHostname()<<endl;
       string response_header = receiveHeader(getWebServerFd());
       ResponseParser new_resp_parser(response_header);
+      
       new_resp_parser.parseHeader();
+      file<<id<<": Received \""<<new_resp_parser.getFirstline()<<"\" from "<<req_parser.getWebHostname()<<endl;
       string resp_firstline = new_resp_parser.getFirstline();
         //if 304, get from cache and send
       if(resp_firstline.find("304")!=string::npos){ //if 304
         sendToFd(client_fd,resp_ptr->getResponse());
+        file<<id<<": Responding \""<<resp_ptr->getFirstline()<<"\" from "<<req_parser.getWebHostname()<<endl;
+        file.close();
         return;
       }
         //else, send new response
       recvEntireResponse(new_resp_parser,client_fd);
       sendToFd(client_fd,new_resp_parser.getResponse());
+      file<<id<<": Responding \""<<new_resp_parser.getFirstline()<<"\" from "<<req_parser.getWebHostname()<<endl;
+      file.close();
       return;
     }
     //2. revalidate
     if(resp_ptr->getMustRevalidate()==true){
       //cout<<"****Into revalidate****"<<id<<endl;
       //connect server
+      file<<id<<": in cache, requires validation"<<endl;
       string new_request = revalidate(req_parser,*resp_ptr);
       connectWebServer(req_parser.getWebHostname().c_str(),req_parser.getWebPort().c_str());
       sendToFd(getWebServerFd(),new_request);
+      size_t pos = new_request.find("\r\n");
+      string new_firstline = new_request.substr(0,pos);
+      file<<id<<": Requesting \""<<new_firstline<<"\" from "<<req_parser.getWebHostname()<<endl;
       //recv server new response
       string response_header = receiveHeader(getWebServerFd());
       ResponseParser new_resp_parser(response_header);
@@ -237,17 +258,24 @@ void Handler::handleGET(int client_fd, RequestParser req_parser, size_t id,Cache
         //if 304, get from cache and send
       if(resp_firstline.find("304")!=string::npos){ //if 304
         sendToFd(client_fd,resp_ptr->getResponse());
+        file<<id<<": Responding \""<<resp_ptr->getFirstline()<<"\" from "<<req_parser.getWebHostname()<<endl;
+        file.close();
         return;
       }
         //else, send new response
       recvEntireResponse(new_resp_parser,client_fd);
       sendToFd(client_fd,new_resp_parser.getResponse());
+      file<<id<<": Responding \""<<new_resp_parser.getFirstline()<<"\" from "<<req_parser.getWebHostname()<<endl;
+      file.close();
       return;
     }
     //3. normal
+    file<<id<<": in cache, valid"<<endl;
     //cout<<"****Into normal****"<<id<<endl;
       //get from cache and send back
     sendToFd(client_fd,resp_ptr->getResponse());
+    file<<id<<": Responding \""<<resp_ptr->getFirstline()<<"\" from "<<req_parser.getWebHostname()<<endl;
+    file.close();
     return;
   }
 
@@ -296,6 +324,8 @@ void Handler::handleGET(int client_fd, RequestParser req_parser, size_t id,Cache
 }
 
 void Handler::handlePOST(int client_fd,RequestParser req_parser, size_t id){ //should this be refrence?
+  ofstream file;
+  file.open("/var/log/erss/proxy.log", ios::app|ios::out);
   if(req_parser.getContentLength()!="0"){ //normal content
     stringstream ss;
     ss<<req_parser.getContentLength();
@@ -324,13 +354,12 @@ void Handler::handlePOST(int client_fd,RequestParser req_parser, size_t id){ //s
   //sendToFd(getWebServerFd(),req_parser.getHeader());
   //sendToFd(getWebServerFd(),req_parser.getContent());
   sendToFd(getWebServerFd(),req_parser.getRequest());
-  
+  file<<id<<": Requesting \""<<req_parser.getFirstline()<<"\" from "<<req_parser.getWebHostname()<<endl;
   //below is response 
   string response_header = receiveHeader(getWebServerFd());
-  
   ResponseParser resp_parser(response_header);
-  
   resp_parser.parseHeader();
+  file<<id<<": Received \""<<resp_parser.getFirstline()<<"\" from "<<req_parser.getWebHostname()<<endl;
   
   if(resp_parser.getContentLength()!="0"){
     stringstream ss;
@@ -358,7 +387,10 @@ void Handler::handlePOST(int client_fd,RequestParser req_parser, size_t id){ //s
       resp_parser.addContent(content);
     }
   }
+
   sendToFd(client_fd,resp_parser.getResponse());
+  file<<id<<": Responding \""<<resp_parser.getFirstline()<<"\" from "<<req_parser.getWebHostname()<<endl;
+  file.close();
   // sendToFd(client_fd,resp_parser.getHeader());
   // sendToFd(client_fd,resp_parser.getContent());
   
@@ -399,6 +431,9 @@ void Handler::handleCONNECT(int client_fd,RequestParser req_parser, size_t id){/
         int nbytes = loopRecv(recv_buf, fds[i]);//get the data recieved
         //cout<<"receive success!"<<endl;
         if(nbytes == 0){ // destroy tunnel
+          ofstream file;
+          file.open("/var/log/erss/proxy.log", ios::app|ios::out);
+          file<<id<<"Tunnel closed"<<endl;
           return;
         }
         loopSend(recv_buf, fds[1-i], nbytes);//send all data out

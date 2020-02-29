@@ -30,7 +30,7 @@ public:
 		time(&requesttime);
 		realtime = localtime(&requesttime);
 		ofstream file;
-		file.open("proxy.log", ios::app|ios::out);
+		file.open("/var/log/erss/proxy.log", ios::app|ios::out);
 		file << thread_id << " : " << '"'<< request << '"' << " from " << ip << " @ " << asctime(realtime) << endl;
 		file.close();
 	}
@@ -39,7 +39,7 @@ public:
 		string web_hostname = req_parser.getWebHostname();
 		string request_content = req_parser.getFirstline();
 		ofstream file;
-		file.open("proxy.log", ios::app|ios::out);
+		file.open("/var/log/erss/proxy.log", ios::app|ios::out);
 		file << thread_id << " : " << '"'<< " Requesting " << request_content << " from " << web_hostname<< endl;
 		file.close();
 	}
@@ -48,7 +48,7 @@ public:
 		string web_hostname = req_parser.getWebHostname();
 		string response_content = resp_parser.getFirstline();
 		ofstream file;
-		file.open("proxy.log", ios::app|ios::out);
+		file.open("/var/log/erss/proxy.log", ios::app|ios::out);
 		file << thread_id << " : " << '"'<< " Received " << response_content << " from " << web_hostname<< endl;
 		file.close();	
 	}
@@ -57,7 +57,7 @@ public:
 		//string web_hostname = client_response.getWebHostname();
 		string response_content = resp_parser.getFirstline();
 		ofstream file;
-		file.open("proxy.log", ios::app|ios::out);
+		file.open("/var/log/erss/proxy.log", ios::app|ios::out);
 		file << thread_id << " : " << '"'<< " Responding " << response_content << endl;
 		file.close();	
 	}
