@@ -1,0 +1,7 @@
+1.http://httpbin.org/forms/post (We submit the form in the website)
+2.http://www.httpwatch.com/httpgallery/chunked/chunkedimage.aspx
+3.http://people.duke.edu/~bmr23/ece568/class.html
+4.http://people.duke.edu/~bmr23/ece568/slides/ERSS_03_Web.pdf(refresh one more time to test cache)
+5.https://www.youtube.com/
+6.https://www.google.com
+7.use mocky to test revalidate. 
